@@ -35,7 +35,7 @@ const Index = () => {
   const [creatingVotazione, setCreatingVotazione] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Redirect to auth if not authenticated
+  // Redirect to auth if not authenticated (after all hooks)
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
   }
