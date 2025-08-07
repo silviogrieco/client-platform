@@ -22,9 +22,9 @@ export async function submitEncryptedVote(votazioneId: number, ciphertext: strin
 }
 
 export interface ResultResponse {
-  si?: number;
-  no?: number;
-  total?: number;
+  Si?: number;
+  No?: number;
+  Totale?: number;
   yes?: number;
   no_count?: number;
   total_voters?: number;
