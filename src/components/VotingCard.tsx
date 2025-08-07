@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Link } from 'react-router-dom';
 
 interface VotingCardProps {
   votazione: {
@@ -163,6 +164,12 @@ export const VotingCard = ({ votazione, userVote, onVoteSuccess, isVotingClosed 
             Votazione conclusa
           </div>
         )}
+
+        <div className="pt-2">
+          <Button asChild variant="outline">
+            <Link to={`/vote/${votazione.id}`}>Vai al voto</Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
