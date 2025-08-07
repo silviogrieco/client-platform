@@ -10,6 +10,7 @@ import { LogOut, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRoles } from "@/hooks/useRoles";
 
 interface Votazione {
   id: number;
@@ -19,6 +20,7 @@ interface Votazione {
   Num_elettori: number;
   Percentuale_si: number;
   Percentuale_no: number;
+  Concluded?: boolean | null;
 }
 
 interface UserVote {
@@ -33,7 +35,8 @@ const Index = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [newTopic, setNewTopic] = useState('');
   const [creatingVotazione, setCreatingVotazione] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+const [dialogOpen, setDialogOpen] = useState(false);
+  const { isAdmin } = useRoles();
 
   // Redirect to auth if not authenticated (after all hooks)
   if (!loading && !user) {
@@ -180,37 +183,39 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">Votazioni Attive</h2>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Nuova Votazione
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Crea Nuova Votazione</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="topic">Argomento della votazione</Label>
-                  <Input
-                    id="topic"
-                    value={newTopic}
-                    onChange={(e) => setNewTopic(e.target.value)}
-                    placeholder="Es. Approvazione del nuovo regolamento"
-                  />
-                </div>
-                <Button 
-                  onClick={createVotazione}
-                  disabled={!newTopic.trim() || creatingVotazione}
-                  className="w-full"
-                >
-                  {creatingVotazione ? 'Creazione...' : 'Crea Votazione'}
+          {isAdmin && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nuova Votazione
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Crea Nuova Votazione</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="topic">Argomento della votazione</Label>
+                    <Input
+                      id="topic"
+                      value={newTopic}
+                      onChange={(e) => setNewTopic(e.target.value)}
+                      placeholder="Es. Approvazione del nuovo regolamento"
+                    />
+                  </div>
+                  <Button 
+                    onClick={createVotazione}
+                    disabled={!newTopic.trim() || creatingVotazione}
+                    className="w-full"
+                  >
+                    {creatingVotazione ? 'Creazione...' : 'Crea Votazione'}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {votazioni.length === 0 ? (
@@ -218,7 +223,7 @@ const Index = () => {
             <CardContent className="text-center py-8">
               <h3 className="text-lg font-medium mb-2">Nessuna votazione disponibile</h3>
               <p className="text-muted-foreground">
-                Non ci sono votazioni attive al momento. Crea la prima votazione!
+                {isAdmin ? "Non ci sono votazioni attive. Crea la prima votazione!" : "Non ci sono votazioni attive al momento. Attendi una nuova votazione dall'amministratore."}
               </p>
             </CardContent>
           </Card>
@@ -230,6 +235,7 @@ const Index = () => {
                 votazione={votazione}
                 userVote={getUserVote(votazione.id)}
                 onVoteSuccess={handleVoteSuccess}
+                isVotingClosed={Boolean(votazione.Concluded)}
               />
             ))}
           </div>

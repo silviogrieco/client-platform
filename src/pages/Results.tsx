@@ -24,10 +24,10 @@ const Results = () => {
       try {
         if (!id) return;
         const r = await getResult(Number(id));
-        const y = r.si ?? r.yes ?? r.no_count === undefined ? (r.si ?? 0) : (r.yes ?? 0);
-        const n = r.no ?? r.no_count ?? 0;
-        setYes(Number(y || 0));
-        setNo(Number(n || 0));
+        const yRaw = (r as any).Si ?? (r as any).si ?? r.yes ?? 0;
+        const nRaw = (r as any).No ?? (r as any).no ?? r.no_count ?? 0;
+        setYes(Number(yRaw || 0));
+        setNo(Number(nRaw || 0));
       } catch (e: any) {
         toast({ title: "Errore risultati", description: e?.message ?? "Impossibile recuperare i risultati", variant: "destructive" });
       }
