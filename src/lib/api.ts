@@ -5,19 +5,33 @@ export interface PublicKeyResponse {
 
 const API_BASE = import.meta.env.VITE_API_URL
 
-export async function getPublicKey(): Promise<PublicKeyResponse> {
-  const res = await fetch(`${API_BASE}/public_key`);
-  if (!res.ok) throw new Error(`Errore recupero chiave pubblica: ${res.status}`);
+export type ElectionPublicKey = { n: string; g: string; pk_fingerprint: string };
+
+export async function createElectionKeys(electionId: number): Promise<ElectionPublicKey> {
+  const res = await fetch(`/elections/${electionId}`, { method: 'POST' });
+  if (!res.ok) throw new Error('Impossibile creare le chiavi per la votazione');
   return res.json();
 }
 
-export async function submitEncryptedVote(votazioneId: number, ciphertext: string) {
-  const res = await fetch(`${API_BASE}/submit_vote`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ votazione_id: votazioneId, ciphertext }),
+export async function getPublicKey(electionId: number): Promise<ElectionPublicKey> {
+  const res = await fetch(`/elections/${electionId}/public_key`);
+  if (!res.ok) throw new Error('Chiave pubblica non trovata per questa votazione');
+  return res.json();
+}
+
+export async function submitEncryptedVote(
+  electionId: number,
+  ciphertext: string,
+  numUtenti: number,
+  topic: string,
+  pkFingerprint: string
+) {
+  const res = await fetch(`/elections/${electionId}/vote`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ ciphertext, num_utenti: numUtenti, topic, pk_fingerprint: pkFingerprint , numUtenti: numUtenti})
   });
-  if (!res.ok) throw new Error(`Errore invio voto: ${res.status}`);
+  if (!res.ok) throw new Error('Invio voto fallito');
   return res.json();
 }
 

@@ -19,23 +19,23 @@ const Vote = () => {
   const [choice, setChoice] = useState<"si" | "no" | "">("");
   const [loadingKey, setLoadingKey] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [pubKey, setPubKey] = useState<{ n: string; g: string } | null>(null);
+  const [pubKey, setPubKey] = useState<{ n: string; g: string; pk_fingerprint: string } | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        // Fetch public key for Paillier
-        const key = await getPublicKey();
-        setPubKey(key);
-      } catch (e: any) {
-        toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
-      } finally {
-        setLoadingKey(false);
-      }
-    };
-    load();
-  }, []);
+     const load = async () => {
+    if (!id) return;
+    try {
+      const key = await getPublicKey(Number(id));
+      setPubKey(key);
+    } catch (e: any) {
+      toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
+    } finally {
+      setLoadingKey(false);
+    }
+  };
+  load();
+}, [id]);
 
   useEffect(() => {
     const fetchTopic = async () => {
@@ -75,8 +75,11 @@ const Vote = () => {
       const m = choice === "si" ? 1n : 0n;
       const c = pk.encrypt(m);
       const ciphertext = c.toString();
+      const {data: profile, error: e1} = await supabase.from("profiles").select("categoria").eq("id", user.id).single()
+      if (e1 || !profile) throw e1 ?? new Error('Profilo non trovato');
 
-      await submitEncryptedVote(Number(id), ciphertext);
+      const num_utenti = await supabase.rpc('get_num_utenti_categoria', {cat_nome: profile.categoria})
+      await submitEncryptedVote(Number(id), ciphertext, Number(num_utenti), topic, pubKey.pk_fingerprint);
 
       // Set client-side flag that user has voted
       sessionStorage.setItem(`voted_${id}`, 'true');

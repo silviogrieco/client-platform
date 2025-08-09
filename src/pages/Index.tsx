@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRoles } from "@/hooks/useRoles";
+import { createElectionKeys } from "@/lib/api";
 
 interface DashboardBallot {
   ballot_id: number;
@@ -61,7 +62,7 @@ const Index = () => {
 
     setCreatingVotazione(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('Votazioni')
         .insert({
           Topic: newTopic.trim(),
@@ -72,9 +73,11 @@ const Index = () => {
           Percentuale_si: 0,
           Percentuale_no: 0,
           Concluded: false
-        });
+        })
+        .select('id')
+        .single();
 
-      if (error) {
+      if (error || !data) {
         toast({
           title: "Errore",
           description: "Errore nella creazione della votazione: " + error.message,
@@ -82,6 +85,9 @@ const Index = () => {
         });
         return;
       }
+      
+      
+      await createElectionKeys(data.id);
 
       toast({
         title: "Votazione creata",

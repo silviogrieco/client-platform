@@ -180,6 +180,12 @@ export type Database = {
           conclusa: boolean
         }[]
       }
+      get_num_utenti_categoria: {
+        Args: {
+          cat_nome: string
+        }
+        Returns: number | null
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
