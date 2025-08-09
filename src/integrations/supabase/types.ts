@@ -14,8 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      categoria: {
+        Row: {
+          id: number
+          nome: string | null
+          num_utenti: number | null
+        }
+        Insert: {
+          id?: number
+          nome?: string | null
+          num_utenti?: number | null
+        }
+        Update: {
+          id?: number
+          nome?: string | null
+          num_utenti?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          categoria: string | null
           cognome: string | null
           created_at: string | null
           id: string
@@ -24,6 +43,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          categoria?: string | null
           cognome?: string | null
           created_at?: string | null
           id: string
@@ -32,6 +52,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          categoria?: string | null
           cognome?: string | null
           created_at?: string | null
           id?: string
@@ -39,7 +60,15 @@ export type Database = {
           updated_at?: string | null
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_profiles_categoria"
+            columns: ["categoria"]
+            isOneToOne: false
+            referencedRelation: "categoria"
+            referencedColumns: ["nome"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -94,35 +123,9 @@ export type Database = {
           },
         ]
       }
-      Utenti: {
-        Row: {
-          Cognome: string | null
-          Email: string | null
-          id: number
-          Nome: string
-          Password: string | null
-          Username: string | null
-        }
-        Insert: {
-          Cognome?: string | null
-          Email?: string | null
-          id?: number
-          Nome: string
-          Password?: string | null
-          Username?: string | null
-        }
-        Update: {
-          Cognome?: string | null
-          Email?: string | null
-          id?: number
-          Nome?: string
-          Password?: string | null
-          Username?: string | null
-        }
-        Relationships: []
-      }
       Votazioni: {
         Row: {
+          categoria: string | null
           Concluded: boolean
           id: number
           No: number | null
@@ -133,6 +136,7 @@ export type Database = {
           Topic: string | null
         }
         Insert: {
+          categoria?: string | null
           Concluded?: boolean
           id?: number
           No?: number | null
@@ -143,6 +147,7 @@ export type Database = {
           Topic?: string | null
         }
         Update: {
+          categoria?: string | null
           Concluded?: boolean
           id?: number
           No?: number | null
@@ -165,6 +170,15 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
         }
         Returns: boolean
+      }
+      rpc_dashboard_ballots: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ballot_id: number
+          topic: string
+          categoria: string
+          conclusa: boolean
+        }[]
       }
     }
     Enums: {

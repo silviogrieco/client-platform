@@ -20,6 +20,7 @@ const Vote = () => {
   const [loadingKey, setLoadingKey] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [pubKey, setPubKey] = useState<{ n: string; g: string } | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -39,6 +40,12 @@ const Vote = () => {
   useEffect(() => {
     const fetchTopic = async () => {
       if (!id) return;
+      
+      // Check if user has already voted (client-side flag)
+      const votedKey = `voted_${id}`;
+      const hasAlreadyVoted = sessionStorage.getItem(votedKey) === 'true';
+      setHasVoted(hasAlreadyVoted);
+      
       const { data, error } = await supabase.from("Votazioni").select("Topic").eq("id", Number(id)).single();
       if (!error && data) setTopic(data.Topic ?? "");
     };
@@ -71,8 +78,11 @@ const Vote = () => {
 
       await submitEncryptedVote(Number(id), ciphertext);
 
+      // Set client-side flag that user has voted
+      sessionStorage.setItem(`voted_${id}`, 'true');
+
       toast({ title: "Voto inviato", description: "Il tuo voto cifrato è stato inviato correttamente." });
-      navigate(`/results/${id}`);
+      navigate('/');
     } catch (e: any) {
       toast({ title: "Errore inoltro voto", description: e?.message ?? "Qualcosa è andato storto.", variant: "destructive" });
     } finally {
@@ -91,6 +101,16 @@ const Vote = () => {
           <CardContent className="space-y-6">
             {loadingKey ? (
               <p className="text-muted-foreground">Caricamento chiave pubblica...</p>
+            ) : hasVoted ? (
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium mb-2">Hai già votato!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Hai già espresso il tuo voto per questa votazione.
+                </p>
+                <Button onClick={() => navigate('/')} size="lg">
+                  Torna alla Dashboard
+                </Button>
+              </div>
             ) : (
               <>
                 <div className="space-y-3">

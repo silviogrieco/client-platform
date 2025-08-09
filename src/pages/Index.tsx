@@ -1,41 +1,31 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { VotingCard } from '@/components/VotingCard';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { LogOut, Plus } from 'lucide-react';
+import { LogOut, Plus, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useRoles } from "@/hooks/useRoles";
 
-interface Votazione {
-  id: number;
-  Topic: string;
-  Si: number;
-  No: number;
-  Num_elettori: number;
-  Percentuale_si: number;
-  Percentuale_no: number;
-  Concluded?: boolean | null;
-}
-
-interface UserVote {
-  votazione_id: number;
-  voto: boolean;
+interface DashboardBallot {
+  ballot_id: number;
+  topic: string;
+  categoria: string;
+  conclusa: boolean;
 }
 
 const Index = () => {
   const { user, loading, signOut } = useAuth();
-  const [votazioni, setVotazioni] = useState<Votazione[]>([]);
-  const [userVotes, setUserVotes] = useState<UserVote[]>([]);
+  const [ballots, setBallots] = useState<DashboardBallot[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [newTopic, setNewTopic] = useState('');
+  const [newCategoria, setNewCategoria] = useState('');
   const [creatingVotazione, setCreatingVotazione] = useState(false);
-const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { isAdmin } = useRoles();
 
   // Redirect to auth if not authenticated (after all hooks)
@@ -43,12 +33,9 @@ const [dialogOpen, setDialogOpen] = useState(false);
     return <Navigate to="/auth" replace />;
   }
 
-  const fetchVotazioni = async () => {
+  const fetchDashboardBallots = async () => {
     try {
-      const { data, error } = await supabase
-        .from('Votazioni')
-        .select('*')
-        .order('id', { ascending: false });
+      const { data, error } = await supabase.rpc('rpc_dashboard_ballots');
 
       if (error) {
         toast({
@@ -59,7 +46,7 @@ const [dialogOpen, setDialogOpen] = useState(false);
         return;
       }
 
-      setVotazioni(data || []);
+      setBallots(data || []);
     } catch (error) {
       toast({
         title: "Errore",
@@ -69,28 +56,8 @@ const [dialogOpen, setDialogOpen] = useState(false);
     }
   };
 
-  const fetchUserVotes = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('user_votes')
-        .select('votazione_id, voto')
-        .eq('user_id', user.id);
-
-      if (error) {
-        console.error('Error fetching user votes:', error);
-        return;
-      }
-
-      setUserVotes(data || []);
-    } catch (error) {
-      console.error('Error fetching user votes:', error);
-    }
-  };
-
   const createVotazione = async () => {
-    if (!newTopic.trim()) return;
+    if (!newTopic.trim() || !newCategoria.trim()) return;
 
     setCreatingVotazione(true);
     try {
@@ -98,11 +65,13 @@ const [dialogOpen, setDialogOpen] = useState(false);
         .from('Votazioni')
         .insert({
           Topic: newTopic.trim(),
+          categoria: newCategoria.trim(),
           Si: 0,
           No: 0,
           Num_elettori: 0,
           Percentuale_si: 0,
-          Percentuale_no: 0
+          Percentuale_no: 0,
+          Concluded: false
         });
 
       if (error) {
@@ -120,8 +89,9 @@ const [dialogOpen, setDialogOpen] = useState(false);
       });
 
       setNewTopic('');
+      setNewCategoria('');
       setDialogOpen(false);
-      fetchVotazioni();
+      fetchDashboardBallots();
     } catch (error) {
       toast({
         title: "Errore",
@@ -135,21 +105,11 @@ const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (user) {
-      Promise.all([fetchVotazioni(), fetchUserVotes()]).finally(() => {
+      fetchDashboardBallots().finally(() => {
         setLoadingData(false);
       });
     }
   }, [user]);
-
-  const handleVoteSuccess = () => {
-    fetchVotazioni();
-    fetchUserVotes();
-  };
-
-  const getUserVote = (votazioneId: number): boolean | null => {
-    const vote = userVotes.find(v => v.votazione_id === votazioneId);
-    return vote ? vote.voto : null;
-  };
 
   if (loading || loadingData) {
     return (
@@ -171,6 +131,14 @@ const [dialogOpen, setDialogOpen] = useState(false);
             <span className="text-sm text-muted-foreground">
               Benvenuto, {user?.email}
             </span>
+            {isAdmin && (
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/admin">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Admin
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={signOut}>
               <LogOut className="w-4 h-4 mr-2" />
               Esci
@@ -182,7 +150,7 @@ const [dialogOpen, setDialogOpen] = useState(false);
       {/* Main content */}
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Votazioni Attive</h2>
+          <h2 className="text-xl font-semibold">{isAdmin ? "Tutte le Votazioni" : "Votazioni Attive"}</h2>
           {isAdmin && (
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
@@ -205,9 +173,18 @@ const [dialogOpen, setDialogOpen] = useState(false);
                       placeholder="Es. Approvazione del nuovo regolamento"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="categoria">Categoria</Label>
+                    <Input
+                      id="categoria"
+                      value={newCategoria}
+                      onChange={(e) => setNewCategoria(e.target.value)}
+                      placeholder="Es. Docenti, Studenti, etc."
+                    />
+                  </div>
                   <Button 
                     onClick={createVotazione}
-                    disabled={!newTopic.trim() || creatingVotazione}
+                    disabled={!newTopic.trim() || !newCategoria.trim() || creatingVotazione}
                     className="w-full"
                   >
                     {creatingVotazione ? 'Creazione...' : 'Crea Votazione'}
@@ -218,7 +195,7 @@ const [dialogOpen, setDialogOpen] = useState(false);
           )}
         </div>
 
-        {votazioni.length === 0 ? (
+        {ballots.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <h3 className="text-lg font-medium mb-2">Nessuna votazione disponibile</h3>
@@ -229,14 +206,35 @@ const [dialogOpen, setDialogOpen] = useState(false);
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {votazioni.map((votazione) => (
-              <VotingCard
-                key={votazione.id}
-                votazione={votazione}
-                userVote={getUserVote(votazione.id)}
-                onVoteSuccess={handleVoteSuccess}
-                isVotingClosed={Boolean(votazione.Concluded)}
-              />
+            {ballots.map((ballot) => (
+              <Card key={ballot.ballot_id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-lg">{ballot.topic}</CardTitle>
+                  {isAdmin && (
+                    <div className="text-sm text-muted-foreground">
+                      Categoria: {ballot.categoria} | Status: {ballot.conclusa ? "Conclusa" : "Attiva"}
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2">
+                    {!ballot.conclusa && (
+                      <Button asChild className="flex-1">
+                        <Link to={`/vote/${ballot.ballot_id}`}>
+                          Vota
+                        </Link>
+                      </Button>
+                    )}
+                    {ballot.conclusa && (
+                      <Button variant="outline" asChild className="flex-1">
+                        <Link to={`/results/${ballot.ballot_id}`}>
+                          Vedi Risultati
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
