@@ -33,11 +33,6 @@ const AdminDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        // Load votazioni
-        const { data: votazioniData, error: votazioniError } = await supabase.rpc('rpc_dashboard_ballots');
-        if (votazioniError) throw votazioniError;
-        setVotazioni(votazioniData || []);
-
         // Load categories
         setLoadingCategories(true);
         const { data: categoriesData, error: categoriesError } = await supabase
@@ -46,6 +41,14 @@ const AdminDashboard = () => {
           .order('nome');
         if (categoriesError) throw categoriesError;
         setCategories(categoriesData || []);
+
+
+        // Load votazioni
+        const { data: votazioniData, error: votazioniError } = await supabase.rpc('rpc_dashboard_ballots');
+        if (votazioniError) throw votazioniError;
+        setVotazioni(votazioniData || []);
+
+       
       } catch (error: any) {
         toast({
           title: "Errore",
