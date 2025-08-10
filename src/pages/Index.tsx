@@ -9,10 +9,10 @@ import { LogOut, Settings } from 'lucide-react';
 import { useRoles } from "@/hooks/useRoles";
 
 interface DashboardBallot {
-  ballot_id: number;
+  id: number;
   topic: string;
   categoria: string;
-  conclusa: boolean;
+  concluded: boolean;
 }
 
 const Index = () => {
@@ -28,8 +28,7 @@ const Index = () => {
 
   const fetchDashboardBallots = async () => {
     try {
-      const { data, error } = await supabase.rpc('rpc_dashboard_ballots').select('ballot_id, topic, categoria, conclusa');
-
+      const { data, error } = await supabase.from("votazioni").select('id, topic, categoria, concluded')
       if (error) {
         toast({
           title: "Errore",
@@ -111,27 +110,27 @@ const Index = () => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {ballots.map((ballot) => (
-              <Card key={ballot.ballot_id} className="hover:shadow-lg transition-shadow">
+              <Card key={ballot.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-lg">{ballot.topic}</CardTitle>
                   {isAdmin && (
                     <div className="text-sm text-muted-foreground">
-                      Categoria: {ballot.categoria} | Status: {ballot.conclusa ? "Conclusa" : "Attiva"}
+                      Categoria: {ballot.categoria} | Status: {ballot.concluded ? "Conclusa" : "Attiva"}
                     </div>
                   )}
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2">
-                    {!ballot.conclusa && (
+                    {!ballot.concluded && (
                       <Button asChild className="flex-1">
-                        <Link to={`/vote/${ballot.ballot_id}`}>
+                        <Link to={`/vote/${ballot.id}`}>
                           Vota
                         </Link>
                       </Button>
                     )}
-                    {ballot.conclusa && (
+                    {ballot.concluded && (
                       <Button variant="outline" asChild className="flex-1">
-                        <Link to={`/results/${ballot.ballot_id}`}>
+                        <Link to={`/results/${ballot.id}`}>
                           Vedi Risultati
                         </Link>
                       </Button>

@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import * as paillier from "paillier-bigint";
 import { supabase } from "@/integrations/supabase/client";
 import Seo from "@/components/Seo";
+import { createElectionKeys, getPublicKey, submitEncryptedVote } from "@/lib/api";
 
 const Vote = () => {
   const { id } = useParams();
@@ -29,9 +30,9 @@ const Vote = () => {
       
       try {
         // Fetch public key for this specific election
-        const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/public_key`);
-        if (!response.ok) throw new Error(`Errore recupero chiave: ${response.status}`);
-        const key = await response.json();
+        let key = await createElectionKeys(Number(id));
+        if (!key) throw new Error('Errore recupero chiave')
+          key = await getPublicKey(Number(id))
         setPubKey(key);
       } catch (e: any) {
         toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
@@ -110,23 +111,7 @@ const Vote = () => {
       const ciphertext = c.toString();
 
       // Call the new backend endpoint with all required data
-      const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/vote`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
-          ciphertext,
-          pk_fingerprint: pubKey.n, // Use n as fingerprint
-          numUtenti
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Errore invio voto: ${response.status}`);
-      }
-
+      const response = await submitEncryptedVote(Number(id), ciphertext, numUtenti, topic);
       // Set client-side flag that user has voted
       sessionStorage.setItem(`voted_${id}`, 'true');
 
