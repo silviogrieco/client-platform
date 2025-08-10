@@ -18,6 +18,7 @@ DECLARE
   user_categoria public.profiles.categoria%TYPE;
   is_user_admin boolean;
 BEGIN
+  SET search_path = 'public'; 
   -- categoria utente
   SELECT p.categoria INTO user_categoria
   FROM public.profiles p
@@ -39,6 +40,7 @@ BEGIN
       AND v."concluded" = false
     ORDER BY v.id DESC;
   END IF;
+  RESET search_path;
 END;
 $$;
 -- Update RLS policies for Votazioni to respect categories

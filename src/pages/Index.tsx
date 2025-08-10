@@ -28,7 +28,7 @@ const Index = () => {
 
   const fetchDashboardBallots = async () => {
     try {
-      const { data, error } = await supabase.rpc('rpc_dashboard_ballots');
+      const { data, error } = await supabase.rpc('rpc_dashboard_ballots').select('*');
 
       if (error) {
         toast({
