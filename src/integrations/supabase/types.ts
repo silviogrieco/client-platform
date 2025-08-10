@@ -16,19 +16,16 @@ export type Database = {
     Tables: {
       categoria: {
         Row: {
-          id: number
-          nome: string | null
-          num_utenti: number | null
+          nome: string
+          num_utenti: number
         }
         Insert: {
-          id?: number
-          nome?: string | null
-          num_utenti?: number | null
+          nome: string
+          num_utenti?: number
         }
         Update: {
-          id?: number
-          nome?: string | null
-          num_utenti?: number | null
+          nome?: string
+          num_utenti?: number
         }
         Relationships: []
       }
@@ -68,6 +65,13 @@ export type Database = {
             referencedRelation: "categoria"
             referencedColumns: ["nome"]
           },
+          {
+            foreignKeyName: "profiles_categoria_fkey"
+            columns: ["categoria"]
+            isOneToOne: false
+            referencedRelation: "categoria"
+            referencedColumns: ["nome"]
+          },
         ]
       }
       user_roles: {
@@ -91,79 +95,111 @@ export type Database = {
         }
         Relationships: []
       }
-      user_votes: {
+      votazioni: {
         Row: {
-          created_at: string | null
-          id: string
-          user_id: string
-          votazione_id: number
-          voto: boolean
+          categoria: string | null
+          concluded: boolean
+          id: number
+          no: number | null
+          si: number
+          topic: string | null
         }
         Insert: {
-          created_at?: string | null
-          id?: string
-          user_id: string
-          votazione_id: number
-          voto: boolean
+          categoria?: string | null
+          concluded?: boolean
+          id?: number
+          no?: number | null
+          si?: number
+          topic?: string | null
         }
         Update: {
-          created_at?: string | null
-          id?: string
-          user_id?: string
-          votazione_id?: number
-          voto?: boolean
+          categoria?: string | null
+          concluded?: boolean
+          id?: number
+          no?: number | null
+          si?: number
+          topic?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "user_votes_votazione_id_fkey"
+            foreignKeyName: "votazioni_categoria_fkey"
+            columns: ["categoria"]
+            isOneToOne: false
+            referencedRelation: "categoria"
+            referencedColumns: ["nome"]
+          },
+        ]
+      }
+      votes: {
+        Row: {
+          created_at: string | null
+          user_id: string
+          votazione_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          user_id: string
+          votazione_id: number
+        }
+        Update: {
+          created_at?: string | null
+          user_id?: string
+          votazione_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_votazione_id_fkey"
             columns: ["votazione_id"]
             isOneToOne: false
-            referencedRelation: "Votazioni"
+            referencedRelation: "v_votazioni_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "votes_votazione_id_fkey"
+            columns: ["votazione_id"]
+            isOneToOne: false
+            referencedRelation: "votazioni"
             referencedColumns: ["id"]
           },
         ]
       }
-      Votazioni: {
-        Row: {
-          categoria: string | null
-          Concluded: boolean
-          id: number
-          No: number | null
-          Num_elettori: number | null
-          Percentuale_no: number | null
-          Percentuale_si: number | null
-          Si: number
-          Topic: string | null
-        }
-        Insert: {
-          categoria?: string | null
-          Concluded?: boolean
-          id?: number
-          No?: number | null
-          Num_elettori?: number | null
-          Percentuale_no?: number | null
-          Percentuale_si?: number | null
-          Si: number
-          Topic?: string | null
-        }
-        Update: {
-          categoria?: string | null
-          Concluded?: boolean
-          id?: number
-          No?: number | null
-          Num_elettori?: number | null
-          Percentuale_no?: number | null
-          Percentuale_si?: number | null
-          Si?: number
-          Topic?: string | null
-        }
-        Relationships: []
-      }
     }
     Views: {
-      [_ in never]: never
+      v_votazioni_status: {
+        Row: {
+          categoria: string | null
+          concluded: boolean | null
+          id: number | null
+          is_concluded: boolean | null
+          no: number | null
+          si: number | null
+          topic: string | null
+          total_users: number | null
+          votes_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votazioni_categoria_fkey"
+            columns: ["categoria"]
+            isOneToOne: false
+            referencedRelation: "categoria"
+            referencedColumns: ["nome"]
+          },
+        ]
+      }
     }
     Functions: {
+      get_num_utenti_categoria: {
+        Args: { cat_nome: string }
+        Returns: number
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -180,11 +216,18 @@ export type Database = {
           conclusa: boolean
         }[]
       }
-      get_num_utenti_categoria: {
-        Args: {
-          cat_nome: string
-        }
-        Returns: number | null
+      rpc_results_list: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          ballot_id: number
+          topic: string
+          categoria: string
+          si: number
+          no: number
+          total_voters: number
+          si_percentage: number
+          no_percentage: number
+        }[]
       }
     }
     Enums: {
