@@ -158,13 +158,6 @@ export type Database = {
             foreignKeyName: "votes_votazione_id_fkey"
             columns: ["votazione_id"]
             isOneToOne: false
-            referencedRelation: "v_votazioni_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "votes_votazione_id_fkey"
-            columns: ["votazione_id"]
-            isOneToOne: false
             referencedRelation: "votazioni"
             referencedColumns: ["id"]
           },
@@ -172,28 +165,7 @@ export type Database = {
       }
     }
     Views: {
-      v_votazioni_status: {
-        Row: {
-          categoria: string | null
-          concluded: boolean | null
-          id: number | null
-          is_concluded: boolean | null
-          no: number | null
-          si: number | null
-          topic: string | null
-          total_users: number | null
-          votes_count: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "votazioni_categoria_fkey"
-            columns: ["categoria"]
-            isOneToOne: false
-            referencedRelation: "categoria"
-            referencedColumns: ["nome"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       get_num_utenti_categoria: {

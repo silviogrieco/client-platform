@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { getResult } from "@/lib/api";
 import Seo from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
@@ -17,29 +16,50 @@ const Results = () => {
   const [topic, setTopic] = useState<string>("");
   const [yes, setYes] = useState(0);
   const [no, setNo] = useState(0);
+  const [loadingResult, setLoadingResult] = useState(true);
   const total = yes + no;
 
   useEffect(() => {
-    const load = async () => {
+    const loadResult = async () => {
+      if (!id) return;
+
       try {
-        if (!id) return;
-        const r = await getResult(Number(id));
-        const yRaw = (r as any).Si ?? (r as any).si ?? r.yes ?? 0;
-        const nRaw = (r as any).No ?? (r as any).no ?? r.no_count ?? 0;
+        // Call the new backend endpoint for results
+        const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
+        if (!response.ok) throw new Error(`Errore recupero risultati: ${response.status}`);
+        const result = await response.json();
+        
+        const yRaw = result.Si ?? result.si ?? result.yes ?? 0;
+        const nRaw = result.No ?? result.no ?? result.no_count ?? 0;
         setYes(Number(yRaw || 0));
         setNo(Number(nRaw || 0));
-      } catch (e: any) {
-        toast({ title: "Errore risultati", description: e?.message ?? "Impossibile recuperare i risultati", variant: "destructive" });
+      } catch (error: any) {
+        toast({
+          title: "Errore",
+          description: error.message || "Impossibile caricare i risultati",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingResult(false);
       }
     };
-    load();
+
+    loadResult();
   }, [id]);
 
   useEffect(() => {
     const fetchTopic = async () => {
       if (!id) return;
-      const { data, error } = await supabase.from("Votazioni").select("Topic").eq("id", Number(id)).single();
-      if (!error && data) setTopic(data.Topic ?? "");
+      try {
+        const { data, error } = await supabase
+          .from("votazioni")
+          .select("topic")
+          .eq("id", Number(id))
+          .single();
+        if (!error && data) setTopic(data.topic ?? "");
+      } catch (error) {
+        // Silent fail for topic fetch
+      }
     };
     fetchTopic();
   }, [id]);
@@ -47,6 +67,16 @@ const Results = () => {
   const title = useMemo(() => (topic ? `Risultati | ${topic}` : "Risultati"), [topic]);
 
   if (!loading && !user) return <Navigate to="/auth" replace />;
+
+  if (loadingResult) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-xl">Caricamento risultati...</h2>
+        </div>
+      </div>
+    );
+  }
 
   const data: ChartDatum[] = [
     { name: "Sì", value: yes },

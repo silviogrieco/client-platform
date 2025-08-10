@@ -1,21 +1,26 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categories, setCategories] = useState<{ nome: string }[]>([]);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     nome: '',
     cognome: '',
-    username: ''
+    username: '',
+    categoria: '',
   });
 
   const { user, signIn, signUp } = useAuth();
@@ -24,6 +29,32 @@ const Auth = () => {
   if (user) {
     return <Navigate to="/" replace />;
   }
+
+  // Load categories on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      setCategoriesLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('categoria')
+          .select('nome')
+          .order('nome');
+        
+        if (error) throw error;
+        setCategories(data || []);
+      } catch (error: any) {
+        toast({
+          title: "Errore",
+          description: "Impossibile caricare le categorie",
+          variant: "destructive"
+        });
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,10 +76,21 @@ const Auth = () => {
           });
         }
       } else {
+        // Validate categoria is selected for registration
+        if (!formData.categoria) {
+          toast({
+            title: "Categoria richiesta",
+            description: "Seleziona una categoria per registrarti",
+            variant: "destructive"
+          });
+          return;
+        }
+
         const { error } = await signUp(formData.email, formData.password, {
           nome: formData.nome,
           cognome: formData.cognome,
-          username: formData.username
+          username: formData.username,
+          categoria: formData.categoria,
         });
         if (error) {
           toast({
@@ -131,6 +173,26 @@ const Auth = () => {
                     onChange={handleInputChange}
                     required
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="categoria">Categoria *</Label>
+                  <Select 
+                    value={formData.categoria} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, categoria: value }))}
+                    disabled={categoriesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={categoriesLoading ? "Caricamento..." : "Seleziona categoria"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.nome} value={cat.nome}>
+                          {cat.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </>
             )}

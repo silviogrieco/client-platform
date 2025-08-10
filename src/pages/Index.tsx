@@ -5,12 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { LogOut, Plus, Settings } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { LogOut, Settings } from 'lucide-react';
 import { useRoles } from "@/hooks/useRoles";
-import { createElectionKeys } from "@/lib/api";
 
 interface DashboardBallot {
   ballot_id: number;
@@ -23,10 +19,6 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [ballots, setBallots] = useState<DashboardBallot[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [newTopic, setNewTopic] = useState('');
-  const [newCategoria, setNewCategoria] = useState('');
-  const [creatingVotazione, setCreatingVotazione] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const { isAdmin } = useRoles();
 
   // Redirect to auth if not authenticated (after all hooks)
@@ -54,58 +46,6 @@ const Index = () => {
         description: "Errore nel caricamento delle votazioni",
         variant: "destructive"
       });
-    }
-  };
-
-  const createVotazione = async () => {
-    if (!newTopic.trim() || !newCategoria.trim()) return;
-
-    setCreatingVotazione(true);
-    try {
-      const { data, error } = await supabase
-        .from('Votazioni')
-        .insert({
-          Topic: newTopic.trim(),
-          categoria: newCategoria.trim(),
-          Si: 0,
-          No: 0,
-          Num_elettori: 0,
-          Percentuale_si: 0,
-          Percentuale_no: 0,
-          Concluded: false
-        })
-        .select('id')
-        .single();
-
-      if (error || !data) {
-        toast({
-          title: "Errore",
-          description: "Errore nella creazione della votazione: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      
-      await createElectionKeys(data.id);
-
-      toast({
-        title: "Votazione creata",
-        description: `Votazione "${newTopic}" creata con successo!`
-      });
-
-      setNewTopic('');
-      setNewCategoria('');
-      setDialogOpen(false);
-      fetchDashboardBallots();
-    } catch (error) {
-      toast({
-        title: "Errore",
-        description: "Errore nella creazione della votazione",
-        variant: "destructive"
-      });
-    } finally {
-      setCreatingVotazione(false);
     }
   };
 
@@ -157,48 +97,6 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">{isAdmin ? "Tutte le Votazioni" : "Votazioni Attive"}</h2>
-          {isAdmin && (
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nuova Votazione
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Crea Nuova Votazione</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="topic">Argomento della votazione</Label>
-                    <Input
-                      id="topic"
-                      value={newTopic}
-                      onChange={(e) => setNewTopic(e.target.value)}
-                      placeholder="Es. Approvazione del nuovo regolamento"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="categoria">Categoria</Label>
-                    <Input
-                      id="categoria"
-                      value={newCategoria}
-                      onChange={(e) => setNewCategoria(e.target.value)}
-                      placeholder="Es. Docenti, Studenti, etc."
-                    />
-                  </div>
-                  <Button 
-                    onClick={createVotazione}
-                    disabled={!newTopic.trim() || !newCategoria.trim() || creatingVotazione}
-                    className="w-full"
-                  >
-                    {creatingVotazione ? 'Creazione...' : 'Crea Votazione'}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          )}
         </div>
 
         {ballots.length === 0 ? (

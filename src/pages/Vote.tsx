@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "@/hooks/use-toast";
-import { getPublicKey, submitEncryptedVote } from "@/lib/api";
 import * as paillier from "paillier-bigint";
 import { supabase } from "@/integrations/supabase/client";
 import Seo from "@/components/Seo";
@@ -16,29 +15,35 @@ const Vote = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [topic, setTopic] = useState<string>("");
+  const [categoria, setCategoria] = useState<string>("");
   const [choice, setChoice] = useState<"si" | "no" | "">("");
   const [loadingKey, setLoadingKey] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [pubKey, setPubKey] = useState<{ n: string; g: string; pk_fingerprint: string } | null>(null);
+  const [pubKey, setPubKey] = useState<{ n: string; g: string } | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [numUtenti, setNumUtenti] = useState<number>(0);
 
   useEffect(() => {
-     const load = async () => {
-    if (!id) return;
-    try {
-      const key = await getPublicKey(Number(id));
-      setPubKey(key);
-    } catch (e: any) {
-      toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
-    } finally {
-      setLoadingKey(false);
-    }
-  };
-  load();
-}, [id]);
+    const load = async () => {
+      if (!id) return;
+      
+      try {
+        // Fetch public key for this specific election
+        const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/public_key`);
+        if (!response.ok) throw new Error(`Errore recupero chiave: ${response.status}`);
+        const key = await response.json();
+        setPubKey(key);
+      } catch (e: any) {
+        toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
+      } finally {
+        setLoadingKey(false);
+      }
+    };
+    load();
+  }, [id]);
 
   useEffect(() => {
-    const fetchTopic = async () => {
+    const fetchVotazione = async () => {
       if (!id) return;
       
       // Check if user has already voted (client-side flag)
@@ -46,10 +51,38 @@ const Vote = () => {
       const hasAlreadyVoted = sessionStorage.getItem(votedKey) === 'true';
       setHasVoted(hasAlreadyVoted);
       
-      const { data, error } = await supabase.from("Votazioni").select("Topic").eq("id", Number(id)).single();
-      if (!error && data) setTopic(data.Topic ?? "");
+      try {
+        const { data, error } = await supabase
+          .from("votazioni")
+          .select("topic, categoria")
+          .eq("id", Number(id))
+          .single();
+        
+        if (error) throw error;
+        if (data) {
+          setTopic(data.topic ?? "");
+          setCategoria(data.categoria ?? "");
+          
+          // Get number of users in this category
+          const { data: categoryData } = await supabase
+            .from("categoria")
+            .select("num_utenti")
+            .eq("nome", data.categoria)
+            .single();
+          
+          if (categoryData) {
+            setNumUtenti(categoryData.num_utenti || 0);
+          }
+        }
+      } catch (error: any) {
+        toast({
+          title: "Errore",
+          description: "Impossibile caricare i dati della votazione",
+          variant: "destructive"
+        });
+      }
     };
-    fetchTopic();
+    fetchVotazione();
   }, [id]);
 
   const title = useMemo(() => (topic ? `Vota | ${topic}` : "Vota"), [topic]);
@@ -75,11 +108,24 @@ const Vote = () => {
       const m = choice === "si" ? 1n : 0n;
       const c = pk.encrypt(m);
       const ciphertext = c.toString();
-      const {data: profile, error: e1} = await supabase.from("profiles").select("categoria").eq("id", user.id).single()
-      if (e1 || !profile) throw e1 ?? new Error('Profilo non trovato');
 
-      const num_utenti = await supabase.rpc('get_num_utenti_categoria', {cat_nome: profile.categoria})
-      await submitEncryptedVote(Number(id), ciphertext, Number(num_utenti), topic, pubKey.pk_fingerprint);
+      // Call the new backend endpoint with all required data
+      const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/vote`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          ciphertext,
+          pk_fingerprint: pubKey.n, // Use n as fingerprint
+          numUtenti
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Errore invio voto: ${response.status}`);
+      }
 
       // Set client-side flag that user has voted
       sessionStorage.setItem(`voted_${id}`, 'true');
