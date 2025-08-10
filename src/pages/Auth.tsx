@@ -26,9 +26,7 @@ const Auth = () => {
   const { user, signIn, signUp } = useAuth();
 
   // Redirect if already authenticated
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
+  
 
   // Load categories on mount
   useEffect(() => {
@@ -56,6 +54,10 @@ const Auth = () => {
     loadCategories();
   }, []);
 
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
