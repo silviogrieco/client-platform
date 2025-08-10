@@ -18,24 +18,32 @@ DECLARE
   user_categoria text;
   is_user_admin boolean;
 BEGIN
-  -- Get user's category and admin status
+
   SELECT p.categoria INTO user_categoria
   FROM public.profiles p
   WHERE p.id = auth.uid();
-  
+
   SELECT public.has_role(auth.uid(), 'admin'::app_role) INTO is_user_admin;
-  
-  -- Return ballots based on user role and category
+
   IF is_user_admin THEN
-    -- Admin sees all ballots
+
     RETURN QUERY
-    SELECT v.id, v."Topic"::text, v.categoria::text, v."Concluded"
+    SELECT 
+      v.id::bigint               AS ballot_id,
+      v."Topic"::text            AS topic,
+      v.categoria::text          AS categoria,
+      v."Concluded"::boolean     AS conclusa
     FROM public."Votazioni" v
     ORDER BY v.id DESC;
+
   ELSE
-    -- Regular users see only active ballots from their category
+
     RETURN QUERY
-    SELECT v.id, v."Topic"::text, v.categoria::text, v."Concluded"
+    SELECT 
+      v.id::bigint,
+      v."Topic"::text,
+      v.categoria::text,
+      v."Concluded"::boolean
     FROM public."Votazioni" v
     WHERE v.categoria = user_categoria
       AND v."Concluded" = false
