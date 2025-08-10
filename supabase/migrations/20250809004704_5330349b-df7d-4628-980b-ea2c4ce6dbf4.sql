@@ -6,44 +6,34 @@ FOREIGN KEY (categoria) REFERENCES public.categoria(nome);
 -- Create RPC function for dashboard ballots
 CREATE OR REPLACE FUNCTION public.rpc_dashboard_ballots()
 RETURNS TABLE (
-  ballot_id bigint,
-  topic text,
-  categoria text,
-  conclusa boolean
+  ballot_id public."Votazioni".id%TYPE,
+  topic     public."Votazioni"."Topic"%TYPE,
+  categoria public."Votazioni".categoria%TYPE,
+  conclusa  public."Votazioni"."Concluded"%TYPE
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
 DECLARE
-  user_categoria text;
+  user_categoria public.profiles.categoria%TYPE;
   is_user_admin boolean;
 BEGIN
-
+  -- categoria utente
   SELECT p.categoria INTO user_categoria
   FROM public.profiles p
   WHERE p.id = auth.uid();
 
+  -- ruolo admin?
   SELECT public.has_role(auth.uid(), 'admin'::app_role) INTO is_user_admin;
 
   IF is_user_admin THEN
-
     RETURN QUERY
-    SELECT 
-      v.id::bigint               AS ballot_id,
-      v."Topic"::text            AS topic,
-      v.categoria::text          AS categoria,
-      v."Concluded"::boolean     AS conclusa
+    SELECT v.id, v."Topic", v.categoria, v."Concluded"
     FROM public."Votazioni" v
     ORDER BY v.id DESC;
-
   ELSE
-
     RETURN QUERY
-    SELECT 
-      v.id::bigint,
-      v."Topic"::text,
-      v.categoria::text,
-      v."Concluded"::boolean
+    SELECT v.id, v."Topic", v.categoria, v."Concluded"
     FROM public."Votazioni" v
     WHERE v.categoria = user_categoria
       AND v."Concluded" = false
@@ -51,7 +41,6 @@ BEGIN
   END IF;
 END;
 $$;
-
 -- Update RLS policies for Votazioni to respect categories
 DROP POLICY IF EXISTS "Users can view concluded votazioni" ON public."Votazioni";
 
