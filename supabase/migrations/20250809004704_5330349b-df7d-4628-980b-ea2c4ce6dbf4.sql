@@ -6,10 +6,10 @@ FOREIGN KEY (categoria) REFERENCES public.categoria(nome);
 -- Create RPC function for dashboard ballots
 CREATE OR REPLACE FUNCTION public.rpc_dashboard_ballots()
 RETURNS TABLE (
-  ballot_id public."Votazioni".id%TYPE,
-  topic     public."Votazioni"."Topic"%TYPE,
-  categoria public."Votazioni".categoria%TYPE,
-  conclusa  public."Votazioni"."Concluded"%TYPE
+  ballot_id public."votazioni"."id"%TYPE,
+  topic     public."votazioni"."topic"%TYPE,
+  categoria public."votazioni"."categoria"%TYPE,
+  conclusa  public."votazioni"."concluded"%TYPE
 )
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -28,24 +28,24 @@ BEGIN
 
   IF is_user_admin THEN
     RETURN QUERY
-    SELECT v.id, v."Topic", v.categoria, v."Concluded"
-    FROM public."Votazioni" v
+    SELECT v.id, v."topic", v.categoria, v."concluded"
+    FROM public."votazioni" v
     ORDER BY v.id DESC;
   ELSE
     RETURN QUERY
-    SELECT v.id, v."Topic", v.categoria, v."Concluded"
-    FROM public."Votazioni" v
+    SELECT v.id, v."topic", v.categoria, v."concluded"
+    FROM public."votazioni" v
     WHERE v.categoria = user_categoria
-      AND v."Concluded" = false
+      AND v."concluded" = false
     ORDER BY v.id DESC;
   END IF;
 END;
 $$;
 -- Update RLS policies for Votazioni to respect categories
-DROP POLICY IF EXISTS "Users can view concluded votazioni" ON public."Votazioni";
+DROP POLICY IF EXISTS "Users can view concluded votazioni" ON public."votazioni";
 
 CREATE POLICY "Users can view votazioni from their category"
-ON public."Votazioni"
+ON public."votazioni"
 FOR SELECT
 TO authenticated
 USING (
