@@ -47,12 +47,22 @@ const Vote = () => {
 
   useEffect(() => {
     const fetchVotazione = async () => {
-      if (!id) return;
+      if (!id || !user) return;
       
-      // Check if user has already voted (client-side flag)
-      const votedKey = `voted_${id}`;
-      const hasAlreadyVoted = sessionStorage.getItem(votedKey) === 'true';
-      setHasVoted(hasAlreadyVoted);
+      // Check if user has already voted by querying the votes table
+      try {
+        const { data: voteData } = await supabase
+          .from("votes")
+          .select("user_id")
+          .eq("votazione_id", Number(id))
+          .eq("user_id", user.id)
+          .single();
+        
+        setHasVoted(!!voteData);
+      } catch (error) {
+        // No vote found, user hasn't voted yet
+        setHasVoted(false);
+      }
       
       try {
         const { data, error } = await supabase
@@ -86,7 +96,7 @@ const Vote = () => {
       }
     };
     fetchVotazione();
-  }, [id]);
+  }, [id, user]);
 
   const title = useMemo(() => (topic ? `Vota | ${topic}` : "Vota"), [topic]);
 
@@ -114,8 +124,8 @@ const Vote = () => {
 
       // Call the new backend endpoint with all required data
       const response = await submitEncryptedVote(Number(id), ciphertext, numUtenti, topic);
-      // Set client-side flag that user has voted
-      sessionStorage.setItem(`voted_${id}`, 'true');
+      // Set local state that user has voted
+      setHasVoted(true);
 
       toast({ title: "Voto inviato", description: "Il tuo voto cifrato è stato inviato correttamente." });
       setVoteSubmitted(true);
