@@ -126,7 +126,13 @@ const Vote = () => {
 
       // Call the new backend endpoint with all required data
       const response = await submitEncryptedVote(Number(id), ciphertext, numUtenti, topic);
-      // Set local state that user has voted
+      
+      // Insert vote record in database to track user has voted
+      await supabase.from("votes").insert({
+        votazione_id: Number(id),
+        user_id: user.id
+      });
+      
       setHasVoted(true);
 
       toast({ title: "Voto inviato", description: "Il tuo voto cifrato è stato inviato correttamente." });
