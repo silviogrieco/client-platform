@@ -26,11 +26,13 @@ const Results = () => {
 
       try {
         // Check if voting is concluded via the endpoint
-        const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
-        if (!response.ok) throw new Error(`Errore recupero risultati: ${response.status}`);
-        const result = await response.json();
+        const {data: catData} = await supabase.from("votazioni").select("categoria").eq("id", Number(id)).single();
+        const {data: numData} = await supabase.from("categoria").select("num_utenti").eq("nome", catData.categoria).single();
+        const response = await getResult(Number(id), Number(numData.num_utenti));
+        if (!(response.status === "ok"))
+           throw new Error(`Errore recupero risultati: ${response.status}`);
         
-        if (result.status !== 'ok') {
+        if (response.status !== 'ok') {
           toast({
             title: "Votazione non conclusa",
             description: "La votazione è ancora in corso",
