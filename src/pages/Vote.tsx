@@ -23,6 +23,8 @@ const Vote = () => {
   const [pubKey, setPubKey] = useState<{ n: string; g: string } | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [numUtenti, setNumUtenti] = useState<number>(0);
+  const [voteSubmitted, setVoteSubmitted] = useState(false);
+  const [showViewResults, setShowViewResults] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -45,12 +47,22 @@ const Vote = () => {
 
   useEffect(() => {
     const fetchVotazione = async () => {
-      if (!id) return;
+      if (!id || !user) return;
       
-      // Check if user has already voted (client-side flag)
-      const votedKey = `voted_${id}`;
-      const hasAlreadyVoted = sessionStorage.getItem(votedKey) === 'true';
-      setHasVoted(hasAlreadyVoted);
+      // Check if user has already voted by querying the votes table
+      try {
+        const { data: voteData } = await supabase
+          .from("votes")
+          .select("user_id")
+          .eq("votazione_id", Number(id))
+          .eq("user_id", user.id)
+          .single();
+        
+        setHasVoted(!!voteData);
+      } catch (error) {
+        // No vote found, user hasn't voted yet
+        setHasVoted(false);
+      }
       
       try {
         const { data, error } = await supabase
@@ -84,7 +96,7 @@ const Vote = () => {
       }
     };
     fetchVotazione();
-  }, [id]);
+  }, [id, user]);
 
   const title = useMemo(() => (topic ? `Vota | ${topic}` : "Vota"), [topic]);
 
@@ -112,11 +124,24 @@ const Vote = () => {
 
       // Call the new backend endpoint with all required data
       const response = await submitEncryptedVote(Number(id), ciphertext, numUtenti, topic);
-      // Set client-side flag that user has voted
-      sessionStorage.setItem(`voted_${id}`, 'true');
+      // Set local state that user has voted
+      setHasVoted(true);
 
       toast({ title: "Voto inviato", description: "Il tuo voto cifrato è stato inviato correttamente." });
-      navigate('/');
+      setVoteSubmitted(true);
+      
+      // Check if voting is concluded to show results button
+      setTimeout(async () => {
+        try {
+          const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
+          const resultData = await resultResponse.json();
+          if (resultData.status === 'ok') {
+            setShowViewResults(true);
+          }
+        } catch (error) {
+          console.log('Could not check voting status for results button');
+        }
+      }, 1000);
     } catch (e: any) {
       toast({ title: "Errore inoltro voto", description: e?.message ?? "Qualcosa è andato storto.", variant: "destructive" });
     } finally {
@@ -141,9 +166,55 @@ const Vote = () => {
                 <p className="text-muted-foreground mb-4">
                   Hai già espresso il tuo voto per questa votazione.
                 </p>
-                <Button onClick={() => navigate('/')} size="lg">
-                  Torna alla Dashboard
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={() => navigate('/')} size="lg" className="flex-1">
+                    Torna alla Dashboard
+                  </Button>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
+                        const resultData = await resultResponse.json();
+                        if (resultData.status === 'ok') {
+                          navigate(`/results/${id}`);
+                        } else {
+                          toast({
+                            title: "Votazione in corso",
+                            description: "La votazione non è ancora conclusa. I risultati saranno disponibili quando tutti avranno votato.",
+                          });
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "Errore",
+                          description: "Impossibile verificare lo stato della votazione.",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                    size="lg" 
+                    variant="outline" 
+                    className="flex-1"
+                  >
+                    Vedi Risultati
+                  </Button>
+                </div>
+              </div>
+            ) : voteSubmitted ? (
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium mb-2">Voto inviato con successo!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Il tuo voto è stato registrato correttamente.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={() => navigate('/')} size="lg" className="flex-1">
+                    Torna alla Dashboard
+                  </Button>
+                  {showViewResults && (
+                    <Button onClick={() => navigate(`/results/${id}`)} size="lg" variant="outline" className="flex-1">
+                      Vedi Risultati
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <>

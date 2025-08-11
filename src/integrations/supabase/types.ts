@@ -180,12 +180,14 @@ export type Database = {
         Returns: boolean
       }
       rpc_dashboard_ballots: {
-        Args: Record<PropertyKey, never>
+        Args: Record<PropertyKey, never> | { p_categoria: string }
         Returns: {
-          ballot_id: number
-          topic: string
+          id: string
+          titolo: string
+          descrizione: string
           categoria: string
-          conclusa: boolean
+          data_inizio: string
+          data_fine: string
         }[]
       }
       rpc_results_list: {
