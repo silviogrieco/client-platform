@@ -41,9 +41,10 @@ export interface ResultResponse {
 }
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
-  const res = await fetch(`${API_BASE}/${votazioneId}/result?num_utenti=${numUtenti}`, {
-    method: "GET",
-    headers: { 'Content-Type':'application/json' }
+    const res = await fetch(`${API_BASE}/${votazioneId}/result`, {
+    method: "POST",
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({num_utenti: numUtenti})
   });
   if (!res.ok) throw new Error(`Errore recupero risultati: ${res.status}`);
   return res.json();
