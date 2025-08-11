@@ -23,6 +23,8 @@ const Vote = () => {
   const [pubKey, setPubKey] = useState<{ n: string; g: string } | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [numUtenti, setNumUtenti] = useState<number>(0);
+  const [voteSubmitted, setVoteSubmitted] = useState(false);
+  const [showViewResults, setShowViewResults] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -116,7 +118,20 @@ const Vote = () => {
       sessionStorage.setItem(`voted_${id}`, 'true');
 
       toast({ title: "Voto inviato", description: "Il tuo voto cifrato è stato inviato correttamente." });
-      navigate('/');
+      setVoteSubmitted(true);
+      
+      // Check if voting is concluded to show results button
+      setTimeout(async () => {
+        try {
+          const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
+          const resultData = await resultResponse.json();
+          if (resultData.status === 'ok') {
+            setShowViewResults(true);
+          }
+        } catch (error) {
+          console.log('Could not check voting status for results button');
+        }
+      }, 1000);
     } catch (e: any) {
       toast({ title: "Errore inoltro voto", description: e?.message ?? "Qualcosa è andato storto.", variant: "destructive" });
     } finally {
@@ -144,6 +159,23 @@ const Vote = () => {
                 <Button onClick={() => navigate('/')} size="lg">
                   Torna alla Dashboard
                 </Button>
+              </div>
+            ) : voteSubmitted ? (
+              <div className="text-center py-8">
+                <h3 className="text-lg font-medium mb-2">Voto inviato con successo!</h3>
+                <p className="text-muted-foreground mb-4">
+                  Il tuo voto è stato registrato correttamente.
+                </p>
+                <div className="flex gap-3">
+                  <Button onClick={() => navigate('/')} size="lg" className="flex-1">
+                    Torna alla Dashboard
+                  </Button>
+                  {showViewResults && (
+                    <Button onClick={() => navigate(`/results/${id}`)} size="lg" variant="outline" className="flex-1">
+                      Vedi Risultati
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <>

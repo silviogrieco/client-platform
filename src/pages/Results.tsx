@@ -24,15 +24,32 @@ const Results = () => {
       if (!id) return;
 
       try {
-        // Call the new backend endpoint for results
+        // Check if voting is concluded via the endpoint
         const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
         if (!response.ok) throw new Error(`Errore recupero risultati: ${response.status}`);
         const result = await response.json();
         
-        const yRaw = result.Si ?? result.si ?? result.yes ?? 0;
-        const nRaw = result.No ?? result.no ?? result.no_count ?? 0;
-        setYes(Number(yRaw || 0));
-        setNo(Number(nRaw || 0));
+        if (result.status !== 'ok') {
+          toast({
+            title: "Votazione non conclusa",
+            description: "La votazione è ancora in corso",
+            variant: "destructive"
+          });
+          setLoadingResult(false);
+          return;
+        }
+
+        // If voting is concluded, get results from database
+        const { data: votazioneData, error } = await supabase
+          .from("votazioni")
+          .select("si, no")
+          .eq("id", Number(id))
+          .single();
+
+        if (error) throw error;
+        
+        setYes(votazioneData?.si || 0);
+        setNo(votazioneData?.no || 0);
       } catch (error: any) {
         toast({
           title: "Errore",
