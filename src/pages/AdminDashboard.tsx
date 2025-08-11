@@ -193,6 +193,12 @@ const AdminDashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Dashboard Amministratore</h1>
+          <Button 
+            onClick={() => window.location.href = '/'} 
+            variant="outline"
+          >
+            ← Torna alla Dashboard
+          </Button>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">

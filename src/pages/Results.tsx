@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -112,7 +113,16 @@ const Results = () => {
     <div className="min-h-screen bg-background">
       <Seo title={title} description="Risultati della votazione con percentuali e grafico." canonical={`${window.location.origin}/results/${id}`} />
       <main className="container mx-auto px-4 py-8">
-        <Card className="max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex justify-between items-center">
+            <Button 
+              onClick={() => window.location.href = '/'} 
+              variant="outline"
+            >
+              ← Torna alla Dashboard
+            </Button>
+          </div>
+          <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Risultati</CardTitle>
           </CardHeader>
@@ -150,6 +160,7 @@ const Results = () => {
             </div>
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );
