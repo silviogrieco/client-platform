@@ -41,7 +41,7 @@ export interface ResultResponse {
 }
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
-  const res = await fetch(`${API_BASE}/get_result?votazione_id=${votazioneId}`,
+  const res = await fetch(`${API_BASE}/${votazioneId}/result`,
     {
       method: "GET",
       headers: { 'Content-Type':'application/json' },
