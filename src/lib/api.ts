@@ -37,16 +37,17 @@ export async function submitEncryptedVote(
 }
 
 export interface ResultResponse {
-  Si?: number;
-  No?: number;
-  Totale?: number;
-  yes?: number;
-  no_count?: number;
-  total_voters?: number;
+  status: string
 }
 
-export async function getResult(votazioneId: number): Promise<ResultResponse> {
-  const res = await fetch(`${API_BASE}/get_result?votazione_id=${votazioneId}`);
+export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
+  const res = await fetch(`${API_BASE}/get_result?votazione_id=${votazioneId}`,
+    {
+      method: "GET",
+      headers: { 'Content-Type':'application/json' },
+      body: JSON.stringify({ num_utenti: numUtenti})
+    }
+  );
   if (!res.ok) throw new Error(`Errore recupero risultati: ${res.status}`);
   return res.json();
 }

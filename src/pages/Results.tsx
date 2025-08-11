@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import Seo from "@/components/Seo";
 import { supabase } from "@/integrations/supabase/client";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
+import {getResult} from "@/lib/api"
 
 interface ChartDatum { name: string; value: number }
 
@@ -25,14 +26,18 @@ const Results = () => {
 
       try {
         // Call the new backend endpoint for results
-        const response = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
-        if (!response.ok) throw new Error(`Errore recupero risultati: ${response.status}`);
-        const result = await response.json();
+        const {data: cat} = await supabase.from("votazioni").select("categoria").eq("id", Number(id)).single()
+        const {data: num} = await supabase.from("categoria").select("num_utenti").eq("nome", cat.categoria).single()
+
+        const response = await getResult(Number(id), num.num_utenti);
+        if (response.status === "ok") throw new Error(`Errore recupero risultati: ${response.status}`);
+        /*const result = await response.json();
         
         const yRaw = result.Si ?? result.si ?? result.yes ?? 0;
         const nRaw = result.No ?? result.no ?? result.no_count ?? 0;
         setYes(Number(yRaw || 0));
         setNo(Number(nRaw || 0));
+        */
       } catch (error: any) {
         toast({
           title: "Errore",
