@@ -193,7 +193,7 @@ const Vote = () => {
                       } catch (error) {
                         toast({
                           title: "Errore",
-                          description: "Impossibile verificare lo stato della votazione.",
+                          description: "Impossibile verificare lo stato della votazione." + error,
                           variant: "destructive"
                         });
                       }
