@@ -156,9 +156,38 @@ const Vote = () => {
                 <p className="text-muted-foreground mb-4">
                   Hai già espresso il tuo voto per questa votazione.
                 </p>
-                <Button onClick={() => navigate('/')} size="lg">
-                  Torna alla Dashboard
-                </Button>
+                <div className="flex gap-3">
+                  <Button onClick={() => navigate('/')} size="lg" className="flex-1">
+                    Torna alla Dashboard
+                  </Button>
+                  <Button 
+                    onClick={async () => {
+                      try {
+                        const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
+                        const resultData = await resultResponse.json();
+                        if (resultData.status === 'ok') {
+                          navigate(`/results/${id}`);
+                        } else {
+                          toast({
+                            title: "Votazione in corso",
+                            description: "La votazione non è ancora conclusa. I risultati saranno disponibili quando tutti avranno votato.",
+                          });
+                        }
+                      } catch (error) {
+                        toast({
+                          title: "Errore",
+                          description: "Impossibile verificare lo stato della votazione.",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                    size="lg" 
+                    variant="outline" 
+                    className="flex-1"
+                  >
+                    Vedi Risultati
+                  </Button>
+                </div>
               </div>
             ) : voteSubmitted ? (
               <div className="text-center py-8">
