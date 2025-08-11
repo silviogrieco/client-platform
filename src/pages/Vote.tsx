@@ -175,6 +175,7 @@ const Vote = () => {
                     onClick={async () => {
                       try {
                         const resultData = await getResult(Number(id), numUtenti);
+                        console.log(resultData)
                         if (resultData.status === 'ok') {
                           navigate(`/results/${id}`);
                         } else {
