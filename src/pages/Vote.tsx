@@ -10,6 +10,7 @@ import * as paillier from "paillier-bigint";
 import { supabase } from "@/integrations/supabase/client";
 import Seo from "@/components/Seo";
 import { createElectionKeys, getPublicKey, submitEncryptedVote } from "@/lib/api";
+import {getResult} from "@/lib/api"
 
 const Vote = () => {
   const { id } = useParams();
@@ -25,6 +26,7 @@ const Vote = () => {
   const [numUtenti, setNumUtenti] = useState<number>(0);
   const [voteSubmitted, setVoteSubmitted] = useState(false);
   const [showViewResults, setShowViewResults] = useState(false);
+  
 
   useEffect(() => {
     const load = async () => {
@@ -133,8 +135,7 @@ const Vote = () => {
       // Check if voting is concluded to show results button
       setTimeout(async () => {
         try {
-          const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
-          const resultData = await resultResponse.json();
+          const resultData = await getResult(Number(id), numUtenti);
           if (resultData.status === 'ok') {
             setShowViewResults(true);
           }
@@ -173,8 +174,7 @@ const Vote = () => {
                   <Button 
                     onClick={async () => {
                       try {
-                        const resultResponse = await fetch(`https://aogegjtluttpgbkqciod.supabase.co/functions/v1/elections/${id}/result`);
-                        const resultData = await resultResponse.json();
+                        const resultData = await getResult(Number(id), numUtenti);
                         if (resultData.status === 'ok') {
                           navigate(`/results/${id}`);
                         } else {
