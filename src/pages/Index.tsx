@@ -21,10 +21,7 @@ const Index = () => {
   const [loadingData, setLoadingData] = useState(true);
   const { isAdmin } = useRoles();
 
-  // Redirect to auth if not authenticated (after all hooks)
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
+
 
   const fetchDashboardBallots = async () => {
     try {
@@ -66,6 +63,11 @@ const Index = () => {
     );
   }
 
+    // Redirect to auth if not authenticated (after all hooks)
+  if (!loading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
