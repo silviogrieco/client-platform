@@ -238,7 +238,7 @@ const AdminDashboard = () => {
     } catch (error: any) {
       toast({
         title: "Errore",
-        description: error.message || "Impossibile eliminare l'utente",
+        description: error.message || "Impossibile eliminare l'utente" + error,
         variant: "destructive"
       });
     }
@@ -248,7 +248,7 @@ const AdminDashboard = () => {
     if (simulationData.count < 10) {
       toast({
         title: "Errore",
-        description: "Il numero di utenti deve essere almeno 10",
+        description: "Il numero di utenti deve essere almeno 1",
         variant: "destructive"
       });
       return;
