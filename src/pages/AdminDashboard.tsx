@@ -228,8 +228,9 @@ const AdminDashboard = () => {
   };
 
   const handleDeleteUser = async (userId: string) => {
+    const res = null
     try {
-      await deleteUser(userId);
+      const res = await deleteUser(userId);
       setUsers(prev => prev.filter(user => user.id !== userId));
       toast({
         title: "Utente eliminato",
@@ -238,7 +239,7 @@ const AdminDashboard = () => {
     } catch (error: any) {
       toast({
         title: "Errore",
-        description: error.message || "Impossibile eliminare l'utente" + error,
+        description: error.message || "Impossibile eliminare l'utente" + res,
         variant: "destructive"
       });
     }
