@@ -125,3 +125,7 @@ export async function endSimulation(simulationId: number): Promise<void> {
   });
   if (!res.ok) throw new Error('Impossibile terminare la simulazione');
 }
+
+if (import.meta.env.DEV) {
+  (window as any).api = { getUsers, updateUserCategory, deleteUser };
+}
