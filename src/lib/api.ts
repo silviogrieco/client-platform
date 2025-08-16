@@ -96,9 +96,10 @@ export async function updateUserCategory(userId: string, categoria: string): Pro
   if (!res.ok) throw new Error('Impossibile aggiornare la categoria');
 }
 
-export async function deleteUser(userId: string): Promise<void> {
+export async function deleteUser(userId: string): Promise<JSON> {
   const res = await fetch(`${API_BASE}/users/${userId}/delete_user`);
-  if (!res.ok) throw new Error(`Impossibile eliminare l\'utente + ${res.json}`);
+  if (!res.ok) throw new Error(`Impossibile eliminare l\'utente + ${res.json()}`);
+  return res.json()
 }
 
 // Votazioni endpoint

@@ -239,7 +239,7 @@ const AdminDashboard = () => {
     } catch (error: any) {
       toast({
         title: "Errore",
-        description: error.message || "Impossibile eliminare l'utente" + res,
+        description: error.message || "Impossibile eliminare l'utente" + res.json(),
         variant: "destructive"
       });
     }
