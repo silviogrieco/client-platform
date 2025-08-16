@@ -245,10 +245,10 @@ const AdminDashboard = () => {
   };
 
   const handleStartSimulation = async () => {
-    if (simulationData.count < 1) {
+    if (simulationData.count < 10) {
       toast({
         title: "Errore",
-        description: "Il numero di utenti deve essere almeno 1",
+        description: "Il numero di utenti deve essere almeno 10",
         variant: "destructive"
       });
       return;

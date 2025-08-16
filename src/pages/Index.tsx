@@ -53,6 +53,11 @@ const Index = () => {
     }
   }, [user]);
 
+      // Redirect to auth if not authenticated (after all hooks)
+  if (!loading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
   if (loading || loadingData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -63,11 +68,8 @@ const Index = () => {
     );
   }
 
-    // Redirect to auth if not authenticated (after all hooks)
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
-  
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
