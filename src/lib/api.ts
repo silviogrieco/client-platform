@@ -98,7 +98,7 @@ export async function updateUserCategory(userId: string, categoria: string): Pro
 
 export async function deleteUser(userId: string): Promise<JSON> {
   const res = await fetch(`${API_BASE}/users/${userId}/delete_user`);
-  if (!res.ok) throw new Error(`Impossibile eliminare l\'utente + ${res.json()}`);
+  if (String(res.status) != "ok") throw new Error(`Impossibile eliminare l\'utente  ${res.status}`);
   return res.json()
 }
 
