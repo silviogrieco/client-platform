@@ -9,13 +9,13 @@ const API_BASE = import.meta.env.VITE_API_URL
 export type ElectionPublicKey = { n: string; g: string; pk_fingerprint: string };
 
 export async function createElectionKeys(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE}/elections/${electionId}`, { method: 'POST' });
+  const res = await fetch(`${API_BASE}elections/${electionId}`, { method: 'POST' });
   if (!res.ok) throw new Error('Impossibile creare le chiavi per la votazione');
   return res.json();
 }
 
 export async function getPublicKey(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE}/elections/${electionId}/public_key`);
+  const res = await fetch(`${API_BASE}elections/${electionId}/public_key`);
   if (!res.ok) throw new Error('Chiave pubblica non trovata per questa votazione');
   return res.json();
 }
@@ -27,7 +27,7 @@ export async function submitEncryptedVote(
   topic: string,
 
 ) {
-  const res = await fetch(`${API_BASE}/elections/${electionId}/vote`, {
+  const res = await fetch(`${API_BASE}elections/${electionId}/vote`, {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
     body: JSON.stringify({ ciphertext: ciphertext, topic: topic, num_utenti: numUtenti})
@@ -41,7 +41,7 @@ export interface ResultResponse {
 }
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
-    const res = await fetch(`${API_BASE}/elections/${votazioneId}/result`, {
+    const res = await fetch(`${API_BASE}elections/${votazioneId}/result`, {
     method: "POST",
     headers: { 'Content-Type':'application/json' },
     body: JSON.stringify({num_utenti: numUtenti})
@@ -82,13 +82,13 @@ export type SimulationResponse = {
 
 // User management endpoints
 export async function getUsers(): Promise<User[]> {
-  const res = await fetch(`${API_BASE}/elections//users`);
+  const res = await fetch(`${API_BASE}elections//users`);
   if (!res.ok) throw new Error('Impossibile caricare gli utenti');
   return res.json();
 }
 
 export async function updateUserCategory(userId: string, categoria: string): Promise<void> {
-  const res = await fetch(`${API_BASE}/elections/users/${userId}/category`, {
+  const res = await fetch(`${API_BASE}elections/users/${userId}/category`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ categoria })
@@ -97,21 +97,21 @@ export async function updateUserCategory(userId: string, categoria: string): Pro
 }
 
 export async function deleteUser(userId: string): Promise<JSON> {
-  const res = await fetch(`${API_BASE}/elections/users/${userId}/delete_user`);
+  const res = await fetch(`${API_BASE}elections/users/${userId}/delete_user`);
   if (String(res.status) != "ok") throw new Error(`Impossibile eliminare l\'utente  ${res.status}`);
   return res.json()
 }
 
 // Votazioni endpoint
 export async function getAllVotazioni(): Promise<VoteModel[]> {
-  const res = await fetch(`${API_BASE}/elections/votazioni`);
+  const res = await fetch(`${API_BASE}elections/votazioni`);
   if (!res.ok) throw new Error('Impossibile caricare le votazioni');
   return res.json();
 }
 
 // Simulation endpoints
 export async function startSimulation(data: SimulationStart): Promise<SimulationResponse> {
-  const res = await fetch(`${API_BASE}/simulation`, {
+  const res = await fetch(`${API_BASE}simulation`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -121,7 +121,7 @@ export async function startSimulation(data: SimulationStart): Promise<Simulation
 }
 
 export async function endSimulation(simulationId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}/simulation/${simulationId}/end`, {
+  const res = await fetch(`${API_BASE}simulation/${simulationId}/end`, {
     method: 'POST'
   });
   if (!res.ok) throw new Error('Impossibile terminare la simulazione');
