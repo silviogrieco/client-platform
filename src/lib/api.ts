@@ -82,7 +82,7 @@ export type SimulationResponse = {
 
 // User management endpoints
 export async function getUsers(): Promise<User[]> {
-  const res = await fetch(`${API_BASE}elections//users`);
+  const res = await fetch(`${API_BASE}elections/users`);
   if (!res.ok) throw new Error('Impossibile caricare gli utenti');
   return res.json();
 }
