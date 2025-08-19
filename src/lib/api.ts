@@ -5,18 +5,13 @@ export interface PublicKeyResponse {
 }
 
 const API_BASE = import.meta.env.VITE_API_URL
+const API_BASE_1 = import.meta.env.VITE_API_URL_1
 
 export type ElectionPublicKey = { n: string; g: string; pk_fingerprint: string };
 
 export async function createElectionKeys(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE}elections/${electionId}`, { method: 'POST' });
+  const res = await fetch(`${API_BASE_1}elections/${electionId}`, { method: 'POST' });
   if (!res.ok) throw new Error('Impossibile creare le chiavi per la votazione');
-  return res.json();
-}
-
-export async function getPublicKey(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE}elections/${electionId}/public_key`);
-  if (!res.ok) throw new Error('Chiave pubblica non trovata per questa votazione');
   return res.json();
 }
 

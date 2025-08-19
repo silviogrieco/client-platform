@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import * as paillier from "paillier-bigint";
 import { supabase } from "@/integrations/supabase/client";
 import Seo from "@/components/Seo";
-import { createElectionKeys, getPublicKey, submitEncryptedVote } from "@/lib/api";
+import { createElectionKeys, submitEncryptedVote } from "@/lib/api";
 import {getResult} from "@/lib/api"
 
 const Vote = () => {
@@ -36,7 +36,6 @@ const Vote = () => {
         // Fetch public key for this specific election
         let key = await createElectionKeys(Number(id));
         if (!key) throw new Error('Errore recupero chiave')
-          key = await getPublicKey(Number(id))
         setPubKey(key);
       } catch (e: any) {
         toast({ title: "Errore", description: e?.message ?? "Impossibile recuperare la chiave pubblica", variant: "destructive" });
