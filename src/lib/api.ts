@@ -10,7 +10,7 @@ const API_BASE_1 = import.meta.env.VITE_API_URL_1
 export type ElectionPublicKey = { n: string; g: string; pk_fingerprint: string };
 
 export async function createElectionKeys(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE_1}elections/${electionId}`, { method: 'POST' });
+  const res = await fetch(`${API_BASE_1}elections`, { method: 'POST' });
   if (!res.ok) throw new Error('Impossibile creare le chiavi per la votazione');
   return res.json();
 }
@@ -22,10 +22,10 @@ export async function submitEncryptedVote(
   topic: string,
 
 ) {
-  const res = await fetch(`${API_BASE}elections/${electionId}/vote`, {
+  const res = await fetch(`${API_BASE}elections/vote`, {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ ciphertext: ciphertext, topic: topic, num_utenti: numUtenti})
+    body: JSON.stringify({electionId: electionId, ciphertext: ciphertext, topic: topic, num_utenti: numUtenti})
   });
   if (!res.ok) throw new Error('Invio voto fallito');
   return res.json();
@@ -117,7 +117,7 @@ export async function startSimulation(data: SimulationStart): Promise<Simulation
 
 export async function endSimulation(simulationId: number): Promise<void> {
   const res = await fetch(`${API_BASE}simulation/${simulationId}/end`, {
-    method: 'POST'
+    method: 'GET'
   });
   if (!res.ok) throw new Error('Impossibile terminare la simulazione');
 }
