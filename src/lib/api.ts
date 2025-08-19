@@ -116,8 +116,6 @@ export async function startSimulation(data: SimulationStart): Promise<Simulation
 }
 
 export async function endSimulation(simulationId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}simulation/${simulationId}/end`, {
-    method: 'GET'
-  });
+  const res = await fetch(`${API_BASE}simulation/${simulationId}/end`);
   if (!res.ok) throw new Error('Impossibile terminare la simulazione');
 }
