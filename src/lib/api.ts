@@ -40,10 +40,10 @@ export interface ResultResponse {
 }
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
-    const res = await fetch(`${API_BASE}elections/${votazioneId}/result`, {
+    const res = await fetch(`${API_BASE}elections/result`, {
     method: "POST",
     headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({num_utenti: numUtenti})
+    body: JSON.stringify({votazione_id: votazioneId, num_utenti: numUtenti})
   });
   if (!res.ok) throw new Error(`Errore recupero risultati: ${res.status}`);
   return res.json();
@@ -87,10 +87,10 @@ export async function getUsers(): Promise<User[]> {
 }
 
 export async function updateUserCategory(userId: string, categoria: string): Promise<void> {
-  const res = await fetch(`${API_BASE}elections/users/${userId}/category`, {
+  const res = await fetch(`${API_BASE}elections/users/category`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ categoria })
+    body: JSON.stringify({user_id:userId, categoria: categoria })
   });
   if (!res.ok) throw new Error('Impossibile aggiornare la categoria');
 }
