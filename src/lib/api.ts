@@ -10,7 +10,11 @@ const API_BASE_1 = import.meta.env.VITE_API_URL_1
 export type ElectionPublicKey = { n: string; g: string; pk_fingerprint: string };
 
 export async function createElectionKeys(electionId: number): Promise<ElectionPublicKey> {
-  const res = await fetch(`${API_BASE_1}elections`, { method: 'POST' });
+  const res = await fetch(`${API_BASE_1}elections`, { 
+    method: 'POST',
+    headers : { 'Content-Type':'application/json' },
+    body: JSON.stringify({votazione_id: electionId})
+  });
   if (!res.ok) throw new Error('Impossibile creare le chiavi per la votazione');
   return res.json();
 }
