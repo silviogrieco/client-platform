@@ -101,7 +101,7 @@ export async function deleteUser(userId: string): Promise<JSON> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({user_id: userId })
   });
-  if (String(res.status) != "ok") throw new Error(`Impossibile eliminare l\'utente  ${res.status}`);
+  if (!res.ok) throw new Error(`Impossibile eliminare l\'utente  ${res.status}`);
   return res.json()
 }
 
