@@ -29,7 +29,7 @@ export async function submitEncryptedVote(
   const res = await fetch(`${API_BASE}elections/vote`, {
     method: 'POST',
     headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({electionId: electionId, ciphertext: ciphertext, topic: topic, num_utenti: numUtenti})
+    body: JSON.stringify({votazione_id: electionId, ciphertext: ciphertext, topic: topic, num_utenti: numUtenti})
   });
   if (!res.ok) throw new Error('Invio voto fallito');
   return res.json();
