@@ -125,7 +125,7 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2">
-                    {!ballot.concluded && (
+                    {!isAdmin && !ballot.concluded && (
                       <Button asChild className="flex-1">
                         <Link to={`/vote/${ballot.id}`}>
                           Vota
@@ -138,6 +138,11 @@ const Index = () => {
                           Vedi Risultati
                         </Link>
                       </Button>
+                    )}
+                     {isAdmin && !ballot.concluded && (
+                      <div className="text-sm text-muted-foreground italic">
+                        Gli admin non possono votare.
+                      </div>
                     )}
                   </div>
                 </CardContent>
