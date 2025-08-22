@@ -41,7 +41,7 @@ export interface ResultResponse {
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {
     const res = await fetch(`${API_BASE}elections/result`, {
-    method: "POST",
+    method: 'POST',
     headers: { 'Content-Type':'application/json' },
     body: JSON.stringify({votazione_id: votazioneId, num_utenti: numUtenti})
   });
@@ -124,7 +124,7 @@ export async function startSimulation(data: SimulationStart): Promise<Simulation
 }
 
 export async function endSimulation(simulationId: number): Promise<void> {
-  const res = await fetch(`${API_BASE}simulation/${simulationId}/end`, {
+  const res = await fetch(`${API_BASE}simulation/end`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({simulation_id: simulationId})
