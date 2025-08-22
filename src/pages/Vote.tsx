@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useRoles } from "@/hooks/useRoles";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ const Vote = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { isAdmin } = useRoles();
   const [topic, setTopic] = useState<string>("");
   const [categoria, setCategoria] = useState<string>("");
   const [choice, setChoice] = useState<"si" | "no" | "">("");
@@ -223,30 +225,63 @@ const Vote = () => {
                 </div>
               </div>
             ) : (
-              <>
-                <div className="space-y-3">
-                  <Label>La tua scelta</Label>
-                  <RadioGroup value={choice} onValueChange={(v) => setChoice(v as any)} className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="si" id="scelta-si" />
-                      <Label htmlFor="scelta-si">Sì</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="scelta-no" />
-                      <Label htmlFor="scelta-no">No</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
+                <>
+                  <div className="space-y-3">
+                    <Label>La tua scelta</Label>
+                    {isAdmin ? (
+                      <div className="text-sm text-muted-foreground text-center py-4 border rounded">
+                        Gli amministratori non possono votare
+                      </div>
+                    ) : (
+                      <RadioGroup value={choice} onValueChange={(v) => setChoice(v as any)} className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="si" id="scelta-si" />
+                          <Label htmlFor="scelta-si">Sì</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="no" id="scelta-no" />
+                          <Label htmlFor="scelta-no">No</Label>
+                        </div>
+                      </RadioGroup>
+                    )}
+                  </div>
 
-                <div className="flex gap-3">
-                  <Button onClick={onSubmit} disabled={submitting || !choice} className="flex-1">
-                    {submitting ? "Invio..." : "Invia voto"}
-                  </Button>
-                  <Button variant="outline" className="flex-1" onClick={() => navigate(-1)}>
-                    Annulla
-                  </Button>
-                </div>
-              </>
+                  <div className="flex gap-3">
+                    {isAdmin ? (
+                      <Button 
+                        onClick={async () => {
+                          try {
+                            const resultData = await getResult(Number(id), numUtenti);
+                            if (resultData.status === 'ok') {
+                              navigate(`/results/${id}`);
+                            } else {
+                              toast({
+                                title: "Votazione in corso",
+                                description: "La votazione non è ancora conclusa.",
+                              });
+                            }
+                          } catch (error) {
+                            toast({
+                              title: "Errore",
+                              description: "Impossibile verificare lo stato della votazione.",
+                              variant: "destructive"
+                            });
+                          }
+                        }}
+                        className="flex-1"
+                      >
+                        Visualizza Risultati
+                      </Button>
+                    ) : (
+                      <Button onClick={onSubmit} disabled={submitting || !choice} className="flex-1">
+                        {submitting ? "Invio..." : "Invia voto"}
+                      </Button>
+                    )}
+                    <Button variant="outline" className="flex-1" onClick={() => navigate(-1)}>
+                      Annulla
+                    </Button>
+                  </div>
+                </>
             )}
           </CardContent>
         </Card>

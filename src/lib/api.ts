@@ -90,19 +90,25 @@ export async function updateUserCategory(userId: string, categoria: string): Pro
   const res = await fetch(`${API_BASE}elections/users/category`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({user_id:userId, categoria: categoria })
+    body: JSON.stringify({user_id: userId, categoria: categoria })
   });
   if (!res.ok) throw new Error('Impossibile aggiornare la categoria');
 }
 
-export async function deleteUser(userId: string): Promise<JSON> {
+export async function deleteUser(userId: string): Promise<void> {
   const res = await fetch(`${API_BASE}elections/users/delete_user`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({user_id: userId })
   });
-  if (!res.ok) throw new Error(`Impossibile eliminare l\'utente  ${res.status}`);
-  return res.json()
+  if (!res.ok) throw new Error(`Impossibile eliminare l'utente: ${res.status}`);
+}
+
+// Get unique categories from users
+export async function getCategories(): Promise<string[]> {
+  const users = await getUsers();
+  const categories = [...new Set(users.map(u => u.categoria).filter(Boolean))];
+  return categories;
 }
 
 // Votazioni endpoint
