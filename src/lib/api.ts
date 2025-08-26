@@ -106,9 +106,9 @@ export async function deleteUser(userId: string): Promise<void> {
 
 // Get unique categories from users
 export async function getCategories(): Promise<string[]> {
-  const users = await getUsers();
-  const categories = [...new Set(users.map(u => u.categoria).filter(Boolean))];
-  return categories;
+ const res = await fetch(`${API_BASE}categoria/list`);
+  if (!res.ok) throw new Error('Impossibile caricare le categorie');
+  return res.json();
 }
 
 // Votazioni endpoint
