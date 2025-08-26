@@ -48,10 +48,7 @@ const AdminDashboard = () => {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [selectedVotazioni, setSelectedVotazioni] = useState<Set<number>>(new Set());
 
-  if (!loading && !user) return <Navigate to="/auth" replace />;
-  if (!rolesLoading && isAdmin) return <Navigate to="/admin" replace />;
-  if (!rolesLoading && !isAdmin) return <Navigate to="/" replace />;
-
+  
   const loadData = async () => {
     try {
       const [usersData, votazioniData, categoriesData] = await Promise.all([
@@ -99,6 +96,18 @@ const AdminDashboard = () => {
       sessionStorage.removeItem('simulationId');
     }
   }, [simulationData]);
+
+  if (loading || rolesLoading) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isAdmin) return <Navigate to="/" replace />;
+
 
   const handleUpdateCategory = async () => {
     if (!editingUser || !newCategory) return;
@@ -641,7 +650,7 @@ const handleDeleteSelectedVotazioni = async () => {
                           {!votazione.concluded && (
                             <Badge variant="outline">Attiva</Badge>
                           )}
-                            
+
                            <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="destructive" size="sm" className="ml-2">
