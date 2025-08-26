@@ -14,9 +14,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Trash2, Edit, Search } from 'lucide-react';
-import { getUsers, updateUserCategory, deleteUser, getAllVotazioni, startSimulation, endSimulation, getCategories, User, VoteModel, SimulationStart, SimulationResponse } from '@/lib/api';
+import { getUsers, updateUserCategory, deleteUser, getAllVotazioni, startSimulation, endSimulation, getCategories, User, VoteModel, SimulationStart, SimulationResponse, newCategoria, newElection, deleteElection } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import Seo from '@/components/Seo';
+import {supabase} from '@/integrations/supabase/client'
 
 const AdminDashboard = () => {
   const { user, loading } = useAuth();
@@ -31,7 +32,12 @@ const AdminDashboard = () => {
   const [isSimulating, setIsSimulating] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newCategory, setNewCategory] = useState('');
-  
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [newVote, setNewVote] = useState<{ topic: string; categoria: string }>({
+    topic: '',
+    categoria: '',
+  });
+  const [creatingVote, setCreatingVote] = useState(false);
   // Search states
   const [userSearch, setUserSearch] = useState('');
   const [votazioniSearch, setVotazioniSearch] = useState('');
@@ -43,6 +49,7 @@ const AdminDashboard = () => {
   const [selectedVotazioni, setSelectedVotazioni] = useState<Set<number>>(new Set());
 
   if (!loading && !user) return <Navigate to="/auth" replace />;
+  if (!rolesLoading && isAdmin) return <Navigate to="/admin" replace />;
   if (!rolesLoading && !isAdmin) return <Navigate to="/" replace />;
 
   const loadData = async () => {
@@ -149,7 +156,52 @@ const AdminDashboard = () => {
         variant: "destructive"
       });
     }
-  };
+  };  
+
+  const handleCreateCategory = async () => {
+    const nome = newCategory.trim();
+    if (!nome) return;
+    setCreatingCategory(true);
+    try {
+      await newCategoria(nome);
+      setCategories(prev => Array.from(new Set([...prev, nome])).sort());
+      setNewCategory('');
+      toast({ title: 'Categoria creata', description: `“${nome}” aggiunta con successo.` });
+    } catch (e: any) {
+      toast({ title: 'Errore', description: e.message ?? 'Impossibile creare la categoria', variant: 'destructive' });
+      throw e
+    } finally {
+      setCreatingCategory(false);
+    }
+};
+
+  const handleCreateVotazione = async () => {
+  const topic = newVote.topic.trim();
+  const categoria = (newVote.categoria || '').trim();
+  if (!topic || !categoria) {
+    toast({ title: 'Dati mancanti', description: 'Compila topic e categoria', variant: 'destructive' });
+    return;
+  }
+  setCreatingVote(true);
+  try {
+    const created = await newElection(topic, categoria)
+
+     const normalized: VoteModel = {
+      id: Number(created.id),
+      topic: String(created.topic),
+      categoria: String(created.categoria),
+      concluded: Boolean(created.concluded),
+    };
+
+    setVotazioni(prev => [...prev, normalized].sort((a,b) => a.id - b.id));
+    setNewVote({ topic: '', categoria: '' });
+    toast({ title: 'Votazione creata', description: `#${normalized.id} – ${normalized.topic}` });
+  } catch (e: any) {
+    toast({ title: 'Errore', description: e.message ?? 'Impossibile creare la votazione', variant: 'destructive' });
+  } finally {
+    setCreatingVote(false);
+  }
+};
 
   const handleStartSimulation = async () => {
     if (!simulationForm.count || !simulationForm.categoria) return;
@@ -251,6 +303,37 @@ const AdminDashboard = () => {
     setSelectedVotazioni(newSelected);
   };
 
+  const handleDeleteVotazione = async (id: number) => {
+  try {
+    await deleteElection(id);
+    setVotazioni(prev => prev.filter(v => v.id !== id));
+    setSelectedVotazioni(prev => {
+      const s = new Set(prev);
+      s.delete(id);
+      return s;
+    });
+    toast({ title: 'Eliminata', description: `Votazione #${id} rimossa.` });
+  } catch (e: any) {
+    toast({ title: 'Errore', description: e.message ?? 'Impossibile eliminare la votazione', variant: 'destructive' });
+    throw e
+  }
+};
+
+
+const handleDeleteSelectedVotazioni = async () => {
+  const ids = Array.from(selectedVotazioni);
+  if (ids.length === 0) return;
+  try {
+    const { error } = await supabase.from('votazioni').delete().in('id', ids);
+    if (error) throw error;
+    setVotazioni(prev => prev.filter(v => !selectedVotazioni.has(v.id)));
+    setSelectedVotazioni(new Set());
+    toast({ title: 'Eliminate', description: `${ids.length} votazioni rimosse.` });
+  } catch (e: any) {
+    toast({ title: 'Errore', description: e.message ?? 'Impossibile eliminare le votazioni', variant: 'destructive' });
+  }
+};
+
   return (
     <div className="min-h-screen bg-background">
       <Seo
@@ -270,6 +353,57 @@ const AdminDashboard = () => {
         </div>
 
         <div className="space-y-6">
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Crea votazione o categoria</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-6 md:grid-cols-2">
+              {/* Crea categoria */}
+              <div className="space-y-3">
+                <div className="text-sm font-medium">Nuova categoria</div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Nome categoria"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                  />
+                  <Button onClick={handleCreateCategory} disabled={creatingCategory || !newCategory.trim()}>
+                    {creatingCategory ? 'Creazione...' : 'Aggiungi'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Crea votazione */}
+              <div className="space-y-3">
+                <div className="text-sm font-medium">Nuova votazione</div>
+                <Input
+                  placeholder="Topic"
+                  value={newVote.topic}
+                  onChange={(e) => setNewVote(v => ({ ...v, topic: e.target.value }))}
+                  className="mb-2"
+                />
+                <Select
+                  value={newVote.categoria}
+                  onValueChange={(value) => setNewVote(v => ({ ...v, categoria: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div>
+                  <Button onClick={handleCreateVotazione} disabled={creatingVote || !newVote.topic.trim() || !newVote.categoria}>
+                    {creatingVote ? 'Creazione...' : 'Crea votazione'}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Gestione Utenti */}
           <Card>
             <CardHeader>
@@ -429,6 +563,29 @@ const AdminDashboard = () => {
                   className="pl-10"
                 />
               </div>
+                <div className="mt-3 flex justify-end">
+                  {selectedVotazioni.size > 0 && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Elimina selezionate ({selectedVotazioni.size})
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Conferma eliminazione multipla</AlertDialogTitle>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annulla</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteSelectedVotazioni}>
+                            Elimina
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+              </div>  
             </CardHeader>
             <CardContent>
               {loadingVotazioni ? (
@@ -479,10 +636,30 @@ const AdminDashboard = () => {
                             >
                               Vedi Risultati
                             </Button>
+
                           )}
                           {!votazione.concluded && (
                             <Badge variant="outline">Attiva</Badge>
                           )}
+                            
+                           <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="destructive" size="sm" className="ml-2">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Eliminare la votazione #{votazione.id}?</AlertDialogTitle>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteVotazione(votazione.id)}>
+                                  Elimina
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))}

@@ -8,8 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from '@/hooks/use-toast';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useRoles } from '@/hooks/useRoles';
 
 const Auth = () => {
+
+  const { isAdmin, loading: rolesLoading } = useRoles();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -25,7 +28,7 @@ const Auth = () => {
 
   const { user, signIn, signUp } = useAuth();
 
-  // Redirect if already authenticated
+
   
 
   // Load categories on mount
@@ -54,10 +57,10 @@ const Auth = () => {
     loadCategories();
   }, []);
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-  
+if (user && !rolesLoading) {
+  return <Navigate to={isAdmin ? "/admin" : "/"} replace />;
+}
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);

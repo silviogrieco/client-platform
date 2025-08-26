@@ -19,7 +19,7 @@ const Index = () => {
   const { user, loading, signOut } = useAuth();
   const [ballots, setBallots] = useState<DashboardBallot[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const { isAdmin } = useRoles();
+  const { isAdmin, loading: rolesLoading } = useRoles();
 
 
 
@@ -53,9 +53,13 @@ const Index = () => {
     }
   }, [user]);
 
-      // Redirect to auth if not authenticated (after all hooks)
+
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (!rolesLoading && isAdmin) {
+    return <Navigate to="/admin" replace />;
   }
   
   if (loading || loadingData) {

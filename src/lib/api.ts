@@ -137,3 +137,33 @@ export async function endSimulation(simulationId: number): Promise<void> {
   });
   if (!res.ok) throw new Error('Impossibile terminare la simulazione');
 }
+
+export async function newCategoria(nome: string): Promise<void>{
+  const res = await fetch(`${API_BASE}/categoria`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({nome: nome})
+  });
+  if (!res.ok) throw new Error('Impossibile creare la categoria');
+}
+
+  
+  export async function newElection(topic: string, categoria: string): Promise<VoteModel>{
+    const res = await fetch(`${API_BASE}/elections/insert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({topic: topic, categoria: categoria})
+    });
+    if (!res.ok) throw new Error('Impossibile creare la categoria');
+    return res.json()
+}
+
+  export async function deleteElection(votazione_id: Number): Promise<void>{
+    const res = await fetch(`${API_BASE}/elections/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({votazione_id: votazione_id})
+    });
+    if (!res.ok) throw new Error('Impossibile creare la categoria');
+    return res.json()
+}
