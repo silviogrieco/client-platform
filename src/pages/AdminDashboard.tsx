@@ -333,14 +333,16 @@ const handleDeleteSelectedVotazioni = async () => {
   const ids = Array.from(selectedVotazioni);
   if (ids.length === 0) return;
   try {
-    const { error } = await supabase.from('votazioni').delete().in('id', ids);
-    if (error) throw error;
+    ids.forEach(async element => {
+      await deleteElection(element);
+    });
     setVotazioni(prev => prev.filter(v => !selectedVotazioni.has(v.id)));
     setSelectedVotazioni(new Set());
     toast({ title: 'Eliminate', description: `${ids.length} votazioni rimosse.` });
   } catch (e: any) {
     toast({ title: 'Errore', description: e.message ?? 'Impossibile eliminare le votazioni', variant: 'destructive' });
-  }
+    throw e;
+}
 };
 
   return (
