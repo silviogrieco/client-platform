@@ -139,7 +139,7 @@ export async function endSimulation(simulationId: number): Promise<void> {
 }
 
 export async function newCategoria(nome: string): Promise<void>{
-  const res = await fetch(`${API_BASE}/categoria`, {
+  const res = await fetch(`${API_BASE}categoria`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({nome: nome})
@@ -149,7 +149,7 @@ export async function newCategoria(nome: string): Promise<void>{
 
   
   export async function newElection(topic: string, categoria: string): Promise<VoteModel>{
-    const res = await fetch(`${API_BASE}/elections/insert`, {
+    const res = await fetch(`${API_BASE}elections/insert`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({topic: topic, categoria: categoria})
@@ -159,7 +159,7 @@ export async function newCategoria(nome: string): Promise<void>{
 }
 
   export async function deleteElection(votazione_id: Number): Promise<void>{
-    const res = await fetch(`${API_BASE}/elections/delete`, {
+    const res = await fetch(`${API_BASE}elections/delete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({votazione_id: votazione_id})
