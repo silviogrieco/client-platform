@@ -17,10 +17,10 @@ import { Loader2, Trash2, Edit, Search } from 'lucide-react';
 import { getUsers, updateUserCategory, deleteUser, getAllVotazioni, startSimulation, endSimulation, getCategories, User, VoteModel, SimulationStart, SimulationResponse, newCategoria, newElection, deleteElection } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import Seo from '@/components/Seo';
-import {supabase} from '@/integrations/supabase/client'
+
 
 const AdminDashboard = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const [users, setUsers] = useState<User[]>([]);
   const [votazioni, setVotazioni] = useState<VoteModel[]>([]);
@@ -356,10 +356,10 @@ const handleDeleteSelectedVotazioni = async () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Dashboard Amministratore</h1>
           <Button 
-            onClick={() => window.location.href = '/'} 
+            onClick={signOut} 
             variant="outline"
           >
-            ← Torna alla Dashboard
+            ← Esci
           </Button>
         </div>
 
