@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/api/authority/(.*)", "destination": "https://authority-k9w7.onrender.com/api/authority/$1" },
+    { "source": "/api/aggregator/(.*)", "destination": "https://aggregator-ynd5.onrender.com/api/aggregator/$1" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
