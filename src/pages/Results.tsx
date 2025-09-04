@@ -43,17 +43,8 @@ const Results = () => {
           return;
         }
 
-        // If voting is concluded, get results from database
-        const { data: votazioneData, error } = await supabase
-          .from("votazioni")
-          .select("si, no")
-          .eq("id", Number(id))
-          .single();
-
-        if (error) throw error;
-        
-        setYes(votazioneData?.si || 0);
-        setNo(votazioneData?.no || 0);
+        setYes(Number(response.si) || 0);
+        setNo(Number(response.no) || 0);
       } catch (error: any) {
         toast({
           title: "Errore",

@@ -37,6 +37,8 @@ export async function submitEncryptedVote(
 
 export interface ResultResponse {
   status: string
+  si: string
+  no: string
 }
 
 export async function getResult(votazioneId: number, numUtenti: number): Promise<ResultResponse> {

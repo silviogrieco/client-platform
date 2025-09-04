@@ -77,7 +77,7 @@ if (user && !rolesLoading) {
         } else {
           toast({
             title: "Accesso effettuato",
-            description: "Benvenuto nella piattaforma di e-voting!"
+            description: "Benvenuto in VotingSystem!"
           });
         }
       } else {
@@ -137,7 +137,7 @@ if (user && !rolesLoading) {
           </CardTitle>
           <CardDescription className="text-center">
             {isLogin 
-              ? 'Accedi alla piattaforma di e-voting' 
+              ? 'Accedi a VotingSystem' 
               : 'Crea un nuovo account per votare'
             }
           </CardDescription>
