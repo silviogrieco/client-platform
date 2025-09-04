@@ -11,9 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Trash2, Edit, Search } from 'lucide-react';
+import { Loader2, Trash2, Edit, Search, ChevronDown, ChevronRight } from 'lucide-react';
 import { getUsers, updateUserCategory, deleteUser, getAllVotazioni, startSimulation, endSimulation, getCategories, User, VoteModel, SimulationStart, SimulationResponse, newCategoria, newElection, deleteElection } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import Seo from '@/components/Seo';
@@ -47,6 +48,10 @@ const AdminDashboard = () => {
   // Selection states
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [selectedVotazioni, setSelectedVotazioni] = useState<Set<number>>(new Set());
+  
+  // Collapsible states
+  const [isUsersOpen, setIsUsersOpen] = useState(true);
+  const [isVotazioniOpen, setIsVotazioniOpen] = useState(true);
 
   
   const loadData = async () => {
@@ -416,10 +421,16 @@ const handleDeleteSelectedVotazioni = async () => {
           </Card>
 
           {/* Gestione Utenti */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Gestione Utenti</CardTitle>
+          <Collapsible open={isUsersOpen} onOpenChange={setIsUsersOpen}>
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="p-0 h-auto font-semibold text-lg flex items-center gap-2">
+                      {isUsersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      Gestione Utenti
+                    </Button>
+                  </CollapsibleTrigger>
                 {selectedUsers.size > 0 && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -445,18 +456,19 @@ const handleDeleteSelectedVotazioni = async () => {
                     </AlertDialogContent>
                   </AlertDialog>
                 )}
-              </div>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Cerca per nome, cognome o categoria..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
+                </div>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Cerca per nome, cognome o categoria..."
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
               {loadingUsers ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -558,47 +570,58 @@ const handleDeleteSelectedVotazioni = async () => {
                   </TableBody>
                 </Table>
               )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Votazioni */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Votazioni</CardTitle>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Cerca per topic o categoria..."
-                  value={votazioniSearch}
-                  onChange={(e) => setVotazioniSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-                <div className="mt-3 flex justify-end">
-                  {selectedVotazioni.size > 0 && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Elimina selezionate ({selectedVotazioni.size})
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Conferma eliminazione multipla</AlertDialogTitle>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annulla</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteSelectedVotazioni}>
-                            Elimina
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-              </div>  
-            </CardHeader>
-            <CardContent>
+          <Collapsible open={isVotazioniOpen} onOpenChange={setIsVotazioniOpen}>
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="p-0 h-auto font-semibold text-lg flex items-center gap-2">
+                      {isVotazioniOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      Votazioni
+                    </Button>
+                  </CollapsibleTrigger>
+                  <div className="flex gap-2">
+                    {selectedVotazioni.size > 0 && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="destructive" size="sm">
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Elimina selezionate ({selectedVotazioni.size})
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Conferma eliminazione multipla</AlertDialogTitle>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteSelectedVotazioni}>
+                              Elimina
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Cerca per topic o categoria..."
+                      value={votazioniSearch}
+                      onChange={(e) => setVotazioniSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
               {loadingVotazioni ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin" />
@@ -677,8 +700,10 @@ const handleDeleteSelectedVotazioni = async () => {
                   </TableBody>
                 </Table>
               )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
 
           {/* Simulazione Elezione */}
           <Card>
